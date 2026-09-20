@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
       - name: Configurar JDK 26 (Temurin)
         uses: actions/setup-java@v4
         with:
