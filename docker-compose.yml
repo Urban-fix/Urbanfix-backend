@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: urbanfix-db
+    ports:
+      - "${DB_PORT}:5432"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - urbanfix_pgdata:/var/lib/postgresql/data
+
+volumes:
+  urbanfix_pgdata:
