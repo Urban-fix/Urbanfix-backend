@@ -11,15 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
-
       - name: Configurar JDK 26 (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '26'
           cache: 'maven'
+
+      - name: Verificar version de Java activa
+        run: java -version
 
       - name: Compilar y correr tests
         run: mvn -B clean verify
