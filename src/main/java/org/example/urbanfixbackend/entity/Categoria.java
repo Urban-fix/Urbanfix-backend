@@ -1,27 +1,25 @@
 package org.example.urbanfixbackend.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "categorias")
+@Table(name = "categorias", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "nombre")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Categoria {
+public class Categoria{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank
-    @Size(max = 100)
-    @Column(unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String nombre;
     
-    @Size(max = 500)
+    @Column(nullable = false, length = 500)
     private String descripcion;
 }

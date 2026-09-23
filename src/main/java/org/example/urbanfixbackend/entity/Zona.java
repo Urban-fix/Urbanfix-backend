@@ -1,14 +1,14 @@
 package org.example.urbanfixbackend.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "zonas")
+@Table(name = "zonas", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "distrito")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,10 +17,9 @@ public class Zona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank
-    @Size(max = 100)
-    private String nombre;
+    @Column(nullable = false, unique = true, length = 100)
+    private String distrito;
     
-    @Size(max = 255)
+    @Column(length = 255)
     private String coordenadasReferencia;
 }
