@@ -3,9 +3,6 @@ package org.example.urbanfixbackend.entity;
 import org.example.urbanfixbackend.entity.enums.EstadoReporte;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,29 +20,26 @@ public class Reporte {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @NotBlank
-    @Size(max = 200)
+    @Column(nullable = false, length = 200)
     private String titulo;
     
-    @NotBlank
-    @Size(max = 1000)
+    @Column(nullable = false, length = 2000)
     private String descripcion;
     
-    @NotNull
+    @Column(nullable = false, precision = 10, scale = 8)
     private Double latitud;
     
-    @NotNull
+    @Column(nullable = false, precision = 11, scale = 8)
     private Double longitud;
     
-    @Size(max = 500)
+    @Column(length = 500)
     private String fotoUrl;
     
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private EstadoReporte estadoActual;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -69,7 +63,7 @@ public class Reporte {
     @OneToMany(mappedBy = "reporte", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarioList = new ArrayList<>();
     
-    @PrePersist
+    @PrePersist //ejecuta este método justo antes de insertar el objeto en la base de datos
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();
         if (estadoActual == null) {

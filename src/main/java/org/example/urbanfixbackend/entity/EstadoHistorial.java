@@ -3,7 +3,6 @@ package org.example.urbanfixbackend.entity;
 import org.example.urbanfixbackend.entity.enums.EstadoReporte;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,10 +20,11 @@ public class EstadoHistorial {
     private Long id;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private EstadoReporte estadoAnterior;
     
     @Enumerated(EnumType.STRING)
-    @NotNull
+    @Column(nullable = false, length = 20)
     private EstadoReporte estadoNuevo;
     
     @Column(name = "fecha_cambio", nullable = false, updatable = false)
