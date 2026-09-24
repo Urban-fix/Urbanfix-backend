@@ -8,18 +8,20 @@ import org.example.urbanfixbackend.security.SecurityUtils;
 import org.example.urbanfixbackend.service.ComentarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/reportes/{reporteId}/comentarios")
+@RequestMapping("/api/v1/reportes/{reporteId}/comentarios")
 @RequiredArgsConstructor
 public class ComentarioController {
 
     private final ComentarioService comentarioService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ComentarioResponseDTO> crearComentario(
             @PathVariable Long reporteId,
             @Valid @RequestBody ComentarioCreateDTO dto) {
@@ -35,6 +37,7 @@ public class ComentarioController {
     }
 
     @DeleteMapping("/{comentarioId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> eliminarComentario(
             @PathVariable Long reporteId,
             @PathVariable Long comentarioId) {

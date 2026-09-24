@@ -17,13 +17,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/reportes")
+@RequestMapping("/api/v1/reportes")
 @RequiredArgsConstructor
 public class ReporteController {
 
     private final ReporteService reporteService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReporteResponseDTO> createReporte(@Valid @RequestBody ReporteCreateDTO dto) {
         Long usuarioId = SecurityUtils.getCurrentUserId();
         ReporteResponseDTO response = reporteService.createReporte(dto, usuarioId);
@@ -70,6 +71,7 @@ public class ReporteController {
     }
 
     @GetMapping("/mis-reportes")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ReporteResponseDTO>> getMisReportes() {
         Long usuarioId = SecurityUtils.getCurrentUserId();
         List<ReporteResponseDTO> response = reporteService.getReportesByUsuario(usuarioId);
@@ -77,6 +79,7 @@ public class ReporteController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReporteResponseDTO> updateReporte(
             @PathVariable Long id,
             @Valid @RequestBody ReporteUpdateDTO dto) {
@@ -86,6 +89,7 @@ public class ReporteController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteReporte(@PathVariable Long id) {
         Long usuarioId = SecurityUtils.getCurrentUserId();
         reporteService.deleteReporte(id, usuarioId);
@@ -93,7 +97,7 @@ public class ReporteController {
     }
 
     @PatchMapping("/{id}/estado")
-    @PreAuthorize("hasRole('ADMIN_MUNICIPAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'TECNICO', 'SUPERVISOR')")
     public ResponseEntity<Void> cambiarEstadoReporte(
             @PathVariable Long id,
             @RequestBody EstadoReporte nuevoEstado) {

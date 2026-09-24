@@ -26,10 +26,10 @@ public class Reporte {
     @Column(nullable = false, length = 2000)
     private String descripcion;
     
-    @Column(nullable = false, precision = 10, scale = 8)
+    @Column(nullable = false)
     private Double latitud;
-    
-    @Column(nullable = false, precision = 11, scale = 8)
+
+    @Column(nullable = false)
     private Double longitud;
     
     @Column(length = 500)

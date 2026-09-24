@@ -9,6 +9,7 @@ import org.example.urbanfixbackend.entity.Categoria;
 import org.example.urbanfixbackend.entity.Reporte;
 import org.example.urbanfixbackend.entity.Usuario;
 import org.example.urbanfixbackend.entity.Zona;
+import org.example.urbanfixbackend.entity.enums.EstadoReporte;
 import org.example.urbanfixbackend.exception.CategoriaNotFoundException;
 import org.example.urbanfixbackend.exception.ReporteNotFoundException;
 import org.example.urbanfixbackend.exception.UnauthorizedActionException;
@@ -19,8 +20,10 @@ import org.example.urbanfixbackend.repository.ConfirmacionRepository;
 import org.example.urbanfixbackend.repository.ReporteRepository;
 import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.repository.ZonaRepository;
+import org.example.urbanfixbackend.event.ReporteCreadoEvent;
 import org.example.urbanfixbackend.service.EstadoHistorialService;
 import org.example.urbanfixbackend.service.ReporteService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,7 @@ public class ReporteServiceImpl implements ReporteService {
     private final ZonaRepository zonaRepository;
     private final ConfirmacionRepository confirmacionRepository;
     private final EstadoHistorialService estadoHistorialService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public ReporteResponseDTO createReporte(ReporteCreateDTO dto, Long usuarioId) {

@@ -41,14 +41,17 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/password-reset/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         // Solo LECTURA es publica. Crear/editar/cambiar estado/borrar exige estar autenticado,
-                        // y el rol especifico (ej. ADMIN_MUNICIPAL) se controla con @PreAuthorize en cada endpoint.
-                        .requestMatchers(HttpMethod.GET, "/categorias/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/zonas/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/reportes/**").permitAll()
+                        // y el rol especifico (ej. ADMIN_MUNICIPAL, TECNICO, SUPERVISOR) se controla con @PreAuthorize en cada endpoint.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categorias/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/zonas/**").permitAll()
+                        // /reportes/mis-reportes requiere autenticación (no es público)
+                        .requestMatchers("/api/v1/reportes/mis-reportes").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reportes/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
