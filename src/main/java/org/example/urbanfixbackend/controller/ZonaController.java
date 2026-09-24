@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/zonas")
+@RequestMapping("/api/v1/zonas")
 @RequiredArgsConstructor
 public class ZonaController {
 
     private final ZonaService zonaService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN_MUNICIPAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'SUPERVISOR')")
     public ResponseEntity<ZonaResponseDTO> createZona(@Valid @RequestBody ZonaCreateDTO dto) {
         ZonaResponseDTO response = zonaService.createZona(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -39,7 +39,7 @@ public class ZonaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_MUNICIPAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'SUPERVISOR')")
     public ResponseEntity<ZonaResponseDTO> updateZona(
             @PathVariable Long id,
             @Valid @RequestBody ZonaCreateDTO dto) {

@@ -6,18 +6,20 @@ import org.example.urbanfixbackend.security.SecurityUtils;
 import org.example.urbanfixbackend.service.ConfirmacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/reportes/{reporteId}/confirmaciones")
+@RequestMapping("/api/v1/reportes/{reporteId}/confirmaciones")
 @RequiredArgsConstructor
 public class ConfirmacionController {
 
     private final ConfirmacionService confirmacionService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> confirmarReporte(@PathVariable Long reporteId) {
         Long usuarioId = SecurityUtils.getCurrentUserId();
         confirmacionService.confirmarReporte(reporteId, usuarioId);
@@ -25,6 +27,7 @@ public class ConfirmacionController {
     }
 
     @DeleteMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> eliminarConfirmacion(@PathVariable Long reporteId) {
         Long usuarioId = SecurityUtils.getCurrentUserId();
         confirmacionService.eliminarConfirmacion(reporteId, usuarioId);
@@ -44,6 +47,7 @@ public class ConfirmacionController {
     }
 
     @GetMapping("/verificar")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Boolean> usuarioHaConfirmado(@PathVariable Long reporteId) {
         Long usuarioId = SecurityUtils.getCurrentUserId();
         boolean haConfirmado = confirmacionService.usuarioHaConfirmado(reporteId, usuarioId);

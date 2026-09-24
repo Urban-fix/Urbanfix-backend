@@ -6,6 +6,7 @@ import org.example.urbanfixbackend.entity.Confirmacion;
 import org.example.urbanfixbackend.entity.Reporte;
 import org.example.urbanfixbackend.entity.Usuario;
 import org.example.urbanfixbackend.exception.ConfirmacionDuplicadaException;
+import org.example.urbanfixbackend.exception.ConfirmacionNotFoundException;
 import org.example.urbanfixbackend.exception.ReporteNotFoundException;
 import org.example.urbanfixbackend.mapper.UsuarioMapper;
 import org.example.urbanfixbackend.repository.ConfirmacionRepository;
@@ -30,7 +31,7 @@ public class ConfirmacionServiceImpl implements ConfirmacionService {
     @Override
     public void confirmarReporte(Long reporteId, Long usuarioId) {
         if (confirmacionRepository.existsByReporteIdAndUsuarioId(reporteId, usuarioId)) {
-            throw new ConfirmacionDuplicadaException("El usuario ya ha confirmado este reporte");
+            throw new ConfirmacionDuplicadaException(reporteId, usuarioId);
         }
 
         Reporte reporte = reporteRepository.findById(reporteId)
@@ -49,7 +50,7 @@ public class ConfirmacionServiceImpl implements ConfirmacionService {
     @Override
     public void eliminarConfirmacion(Long reporteId, Long usuarioId) {
         Confirmacion confirmacion = confirmacionRepository.findByReporteIdAndUsuarioId(reporteId, usuarioId)
-                .orElseThrow(() -> new ConfirmacionDuplicadaException("El usuario no ha confirmado este reporte"));
+                .orElseThrow(() -> new ConfirmacionNotFoundException(reporteId, usuarioId));
 
         confirmacionRepository.delete(confirmacion);
     }

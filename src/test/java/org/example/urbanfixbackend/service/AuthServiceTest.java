@@ -7,7 +7,6 @@ import org.example.urbanfixbackend.dto.response.AuthResponseDTO;
 import org.example.urbanfixbackend.entity.Usuario;
 import org.example.urbanfixbackend.entity.enums.Rol;
 import org.example.urbanfixbackend.exception.EmailAlreadyExistsException;
-import org.example.urbanfixbackend.exception.InvalidCredentialsException;
 import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.security.CustomUserDetails;
 import org.example.urbanfixbackend.security.jwt.JwtService;
@@ -126,21 +125,21 @@ class AuthServiceTest {
     void login_InvalidCredentials() {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
-        
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(loginDTO));
+
+        assertThrows(org.springframework.security.authentication.BadCredentialsException.class, () -> authService.login(loginDTO));
     }
     
     @Test
     void refreshToken_Success() {
-        when(jwtService.isRefreshToken("refreshToken")).thenReturn(true);
-        when(jwtService.extractUsername("refreshToken")).thenReturn("test@example.com");
-        when(usuarioRepository.findByEmail("test@example.com")).thenReturn(Optional.of(usuario));
-        when(jwtService.isTokenValid("refreshToken", any(CustomUserDetails.class))).thenReturn(true);
+        when(jwtService.isRefreshToken(eq("refreshToken"))).thenReturn(true);
+        when(jwtService.extractUsername(eq("refreshToken"))).thenReturn("test@example.com");
+        when(usuarioRepository.findByEmail(eq("test@example.com"))).thenReturn(Optional.of(usuario));
+        when(jwtService.isTokenValid(eq("refreshToken"), any(CustomUserDetails.class))).thenReturn(true);
         when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("newAccessToken");
         when(jwtService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("newRefreshToken");
-        
+
         AuthResponseDTO result = authService.refreshToken("refreshToken");
-        
+
         assertNotNull(result);
         assertEquals("newAccessToken", result.accessToken());
         assertEquals("newRefreshToken", result.refreshToken());

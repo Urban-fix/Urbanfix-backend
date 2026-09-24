@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/categorias")
+@RequestMapping("/api/v1/categorias")
 @RequiredArgsConstructor
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN_MUNICIPAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'SUPERVISOR')")
     public ResponseEntity<CategoriaResponseDTO> createCategoria(@Valid @RequestBody CategoriaCreateDTO dto) {
         CategoriaResponseDTO response = categoriaService.createCategoria(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -39,7 +39,7 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_MUNICIPAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'SUPERVISOR')")
     public ResponseEntity<CategoriaResponseDTO> updateCategoria(
             @PathVariable Long id,
             @Valid @RequestBody CategoriaCreateDTO dto) {

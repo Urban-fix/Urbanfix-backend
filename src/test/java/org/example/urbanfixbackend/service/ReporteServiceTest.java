@@ -116,7 +116,7 @@ class ReporteServiceTest {
         
         assertNotNull(result);
         assertEquals(1L, result.id());
-        assertEquals(5L, result.confirmaciones());
+        assertEquals(5L, result.confirmacionesCount());
     }
     
     @Test
@@ -128,7 +128,7 @@ class ReporteServiceTest {
     
     @Test
     void updateReporte_Success() {
-        ReporteUpdateDTO updateDTO = new ReporteUpdateDTO("Bache reparado", "El bache fue arreglado");
+        ReporteUpdateDTO updateDTO = new ReporteUpdateDTO("Bache reparado", "El bache fue arreglado", -12.119, -77.03, "foto2.jpg");
         
         when(reporteRepository.findById(1L)).thenReturn(Optional.of(reporte));
         when(reporteRepository.save(any(Reporte.class))).thenReturn(reporte);
@@ -146,7 +146,7 @@ class ReporteServiceTest {
         otroUsuario.setId(2L);
         reporte.setUsuario(otroUsuario);
         
-        ReporteUpdateDTO updateDTO = new ReporteUpdateDTO("Bache reparado", "El bache fue arreglado");
+        ReporteUpdateDTO updateDTO = new ReporteUpdateDTO("Bache reparado", "El bache fue arreglado", -12.119, -77.03, "foto2.jpg");
         
         when(reporteRepository.findById(1L)).thenReturn(Optional.of(reporte));
         

@@ -33,7 +33,6 @@ build/
 .vscode/
 ### Variables de entorno y credenciales (NO subir nunca) ###
 .env
-.env.local
 application-local.yml
 application-local.yaml
 application-secrets.yml
