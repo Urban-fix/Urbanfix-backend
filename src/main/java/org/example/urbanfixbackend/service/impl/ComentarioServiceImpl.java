@@ -48,7 +48,7 @@ public class ComentarioServiceImpl implements ComentarioService {
     @Override
     @Transactional(readOnly = true)
     public List<ComentarioResponseDTO> getComentariosByReporteId(Long reporteId) {
-        List<Comentario> comentarios = comentarioRepository.findByReporteIdOrderByFechaCreacionDesc(reporteId);
+        List<Comentario> comentarios = comentarioRepository.findByReporteIdOrderByFechaCreacionAsc(reporteId);
         return comentarios.stream()
                 .map(ComentarioMapper::toDTO)
                 .collect(Collectors.toList());

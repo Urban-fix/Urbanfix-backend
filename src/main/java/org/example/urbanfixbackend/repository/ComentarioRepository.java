@@ -13,5 +13,5 @@ public interface ComentarioRepository extends JpaRepository<Comentario, Long> {
 
     List<Comentario> findByUsuarioId(Long usuarioId);
 
-    List<Comentario> findByReporteIdOrderByFechaCreacionDesc(Long reporteId);
+    List<Comentario> findByReporteIdOrderByFechaCreacionAsc(Long reporteId);
 }

@@ -80,9 +80,11 @@ public class EstadoHistorialServiceImpl implements EstadoHistorialService {
         }
 
         boolean transicionValida = switch (estadoActual) {
-            case REPORTADO -> estadoNuevo == EstadoReporte.EN_PROCESO;
-            case EN_PROCESO -> estadoNuevo == EstadoReporte.RESUELTO;
-            case RESUELTO -> false;
+            case REPORTADO -> estadoNuevo == EstadoReporte.EN_PROCESO
+                    || estadoNuevo == EstadoReporte.RECHAZADO;
+            case EN_PROCESO -> estadoNuevo == EstadoReporte.RESUELTO
+                    || estadoNuevo == EstadoReporte.RECHAZADO;
+            case RESUELTO, RECHAZADO -> false;
         };
 
         if (!transicionValida) {
