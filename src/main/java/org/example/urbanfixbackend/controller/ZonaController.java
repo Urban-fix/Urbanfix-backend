@@ -2,6 +2,7 @@ package org.example.urbanfixbackend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.dto.request.ZonaCreateDTO;
 import org.example.urbanfixbackend.dto.response.ZonaResponseDTO;
 import org.example.urbanfixbackend.service.ZonaService;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/zonas")
 @RequiredArgsConstructor
+@Slf4j
 public class ZonaController {
 
     private final ZonaService zonaService;
@@ -23,8 +25,8 @@ public class ZonaController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'SUPERVISOR')")
     public ResponseEntity<ZonaResponseDTO> createZona(@Valid @RequestBody ZonaCreateDTO dto) {
-        System.out.println("DEBUG: User authorities: " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
-        System.out.println("DEBUG: User principal: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        log.debug("User authorities: {}", SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+        log.debug("User principal: {}", SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         ZonaResponseDTO response = zonaService.createZona(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
