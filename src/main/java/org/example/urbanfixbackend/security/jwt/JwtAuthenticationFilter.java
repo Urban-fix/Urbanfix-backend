@@ -31,9 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        System.out.println("DEBUG JWT Filter: Processing request: " + request.getMethod() + " " + request.getRequestURI());
         final String authHeader = request.getHeader("Authorization");
+        System.out.println("DEBUG JWT Filter: Auth header: " + authHeader);
+        System.out.println("DEBUG JWT Filter: Starts with Bearer? " + (authHeader != null && authHeader.startsWith("Bearer ")));
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("DEBUG JWT Filter: No Bearer token, continuing chain");
             filterChain.doFilter(request, response);
             return;
         }
@@ -41,10 +45,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
 
         try {
+            if (!jwtService.isAccessToken(jwt)) {
+                System.out.println("DEBUG JWT: Not an access token");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             final String userEmail = jwtService.extractUsername(jwt);
+            System.out.println("DEBUG JWT: Extracted email: " + userEmail);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                System.out.println("DEBUG JWT: Loaded user details, authorities: " + userDetails.getAuthorities());
 
                 if (jwtService.isTokenValid(jwt, (CustomUserDetails) userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -54,11 +66,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("DEBUG JWT: Authentication set successfully");
+                } else {
+                    System.out.println("DEBUG JWT: Token validation failed");
                 }
             }
         } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
-            // Token mal formado, expirado, con firma inválida o de un usuario inexistente:
-            // se continúa sin autenticación y Spring Security responde 401/403.
+            System.out.println("DEBUG JWT: Exception - " + e.getMessage());
             SecurityContextHolder.clearContext();
         }
 

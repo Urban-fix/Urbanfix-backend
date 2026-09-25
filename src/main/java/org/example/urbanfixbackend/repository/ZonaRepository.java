@@ -12,10 +12,10 @@ import java.util.Optional;
 @Repository
 public interface ZonaRepository extends JpaRepository<Zona, Long> {
 
-    Optional<Zona> findByDistrito(String distrito);
+    Optional<Zona> findByNombre(String nombre);
 
-    boolean existsByDistrito(String distrito);
+    boolean existsByNombre(String nombre);
 
-    @Query("SELECT z FROM Zona z WHERE z.distrito LIKE %:distrito%")
-    List<Zona> searchByDistrito(@Param("distrito") String distrito);
+    @Query("SELECT z FROM Zona z WHERE z.nombre LIKE %:nombre%")
+    List<Zona> searchByNombre(@Param("nombre") String nombre);
 }

@@ -12,6 +12,7 @@ import org.example.urbanfixbackend.service.ReporteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,8 +25,9 @@ public class ReporteController {
     private final ReporteService reporteService;
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReporteResponseDTO> createReporte(@Valid @RequestBody ReporteCreateDTO dto) {
+        System.out.println("DEBUG Reporte: User authorities: " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+        System.out.println("DEBUG Reporte: Auth: " + SecurityContextHolder.getContext().getAuthentication());
         Long usuarioId = SecurityUtils.getCurrentUserId();
         ReporteResponseDTO response = reporteService.createReporte(dto, usuarioId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

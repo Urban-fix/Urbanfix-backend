@@ -5,7 +5,7 @@ public class ZonaNotFoundException extends RuntimeException {
         super("Zona no encontrada con ID: " + id);
     }
 
-    public ZonaNotFoundException(String distrito) {
-        super("Zona no encontrada con distrito: " + distrito);
+    public ZonaNotFoundException(String nombre) {
+        super("Zona no encontrada con nombre: " + nombre);
     }
 }

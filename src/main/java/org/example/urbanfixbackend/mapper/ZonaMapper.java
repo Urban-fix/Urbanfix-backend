@@ -12,7 +12,7 @@ public class ZonaMapper {
         }
         return new ZonaResponseDTO(
                 zona.getId(),
-                zona.getDistrito(),
+                zona.getNombre(),
                 zona.getCoordenadasReferencia()
         );
     }
@@ -22,7 +22,7 @@ public class ZonaMapper {
             return null;
         }
         Zona zona = new Zona();
-        zona.setDistrito(dto.distrito());
+        zona.setNombre(dto.nombre());
         zona.setCoordenadasReferencia(dto.coordenadasReferencia());
         return zona;
     }

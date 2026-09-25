@@ -7,6 +7,7 @@ import org.example.urbanfixbackend.entity.EstadoHistorial;
 import org.example.urbanfixbackend.entity.Reporte;
 import org.example.urbanfixbackend.entity.Usuario;
 import org.example.urbanfixbackend.entity.enums.EstadoReporte;
+import org.example.urbanfixbackend.entity.enums.Rol;
 import org.example.urbanfixbackend.exception.EstadoTransicionInvalidaException;
 import org.example.urbanfixbackend.exception.ReporteNotFoundException;
 import org.example.urbanfixbackend.exception.UnauthorizedActionException;
@@ -20,13 +21,21 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class EstadoHistorialServiceImpl implements EstadoHistorialService {
+
+    private static final Set<Rol> ROLES_CAMBIO_ESTADO = EnumSet.of(
+            Rol.ADMIN_MUNICIPAL,
+            Rol.TECNICO,
+            Rol.SUPERVISOR
+    );
 
     private final EstadoHistorialRepository estadoHistorialRepository;
     private final ReporteRepository reporteRepository;
@@ -40,6 +49,8 @@ public class EstadoHistorialServiceImpl implements EstadoHistorialService {
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ReporteNotFoundException("Usuario no encontrado"));
+
+        validarPermisoCambioEstado(usuario);
 
         EstadoReporte estadoActual = reporte.getEstadoActual();
         EstadoReporte estadoNuevo = dto.nuevoEstado();
@@ -69,6 +80,12 @@ public class EstadoHistorialServiceImpl implements EstadoHistorialService {
         return historial.stream()
                 .map(EstadoHistorialMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void validarPermisoCambioEstado(Usuario usuario) {
+        if (!ROLES_CAMBIO_ESTADO.contains(usuario.getRol())) {
+            throw new UnauthorizedActionException("No tiene permisos para cambiar el estado de un reporte");
+        }
     }
 
     @Override

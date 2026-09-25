@@ -23,12 +23,12 @@ public class ZonaServiceImpl implements ZonaService {
 
     @Override
     public ZonaResponseDTO createZona(ZonaCreateDTO dto) {
-        if (zonaRepository.existsByDistrito(dto.distrito())) {
-            throw new ZonaNotFoundException("Ya existe una zona con el distrito: " + dto.distrito());
+        if (zonaRepository.existsByNombre(dto.nombre())) {
+            throw new ZonaNotFoundException("Ya existe una zona con el nombre: " + dto.nombre());
         }
 
         Zona zona = new Zona();
-        zona.setDistrito(dto.distrito());
+        zona.setNombre(dto.nombre());
         zona.setCoordenadasReferencia(dto.coordenadasReferencia());
 
         Zona savedZona = zonaRepository.save(zona);
@@ -57,12 +57,12 @@ public class ZonaServiceImpl implements ZonaService {
         Zona zona = zonaRepository.findById(id)
                 .orElseThrow(() -> new ZonaNotFoundException(id));
 
-        if (!zona.getDistrito().equals(dto.distrito()) && 
-            zonaRepository.existsByDistrito(dto.distrito())) {
-            throw new ZonaNotFoundException("Ya existe una zona con el distrito: " + dto.distrito());
+        if (!zona.getNombre().equals(dto.nombre()) &&
+            zonaRepository.existsByNombre(dto.nombre())) {
+            throw new ZonaNotFoundException("Ya existe una zona con el nombre: " + dto.nombre());
         }
 
-        zona.setDistrito(dto.distrito());
+        zona.setNombre(dto.nombre());
         zona.setCoordenadasReferencia(dto.coordenadasReferencia());
 
         Zona updatedZona = zonaRepository.save(zona);

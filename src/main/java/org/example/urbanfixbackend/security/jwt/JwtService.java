@@ -64,6 +64,10 @@ public class JwtService {
         return TOKEN_TYPE_REFRESH.equals(extractTokenType(token));
     }
 
+    public boolean isAccessToken(String token) {
+        return TOKEN_TYPE_ACCESS.equals(extractTokenType(token));
+    }
+
     private String buildToken(
             Map<String, Object> extraClaims,
             CustomUserDetails userDetails,
@@ -74,6 +78,7 @@ public class JwtService {
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
+                .claim("email", userDetails.getUsername())
                 .claim("userId", userDetails.getUsuario().getId())
                 .claim("role", userDetails.getUsuario().getRol().name())
                 .claim(CLAIM_TOKEN_TYPE, tokenType)
