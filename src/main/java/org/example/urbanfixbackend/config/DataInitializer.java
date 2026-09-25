@@ -1,6 +1,7 @@
 package org.example.urbanfixbackend.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.entity.Categoria;
 import org.example.urbanfixbackend.entity.Zona;
 import org.example.urbanfixbackend.repository.CategoriaRepository;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
     private final CategoriaRepository categoriaRepository;
@@ -58,7 +60,7 @@ public class DataInitializer implements CommandLineRunner {
         agua.setDescripcion("Problemas con el suministro de agua y desagües");
         categoriaRepository.save(agua);
 
-        System.out.println("Categorías iniciales creadas exitosamente");
+        log.info("Categorías iniciales creadas exitosamente");
     }
 
     private void initializeZonas() {
@@ -87,6 +89,6 @@ public class DataInitializer implements CommandLineRunner {
         este.setCoordenadasReferencia("-34.6037, -58.2356");
         zonaRepository.save(este);
 
-        System.out.println("Zonas iniciales creadas exitosamente");
+        log.info("Zonas iniciales creadas exitosamente");
     }
 }

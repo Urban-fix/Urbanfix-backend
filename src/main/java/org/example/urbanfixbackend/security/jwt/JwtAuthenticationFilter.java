@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.security.CustomUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +21,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -31,13 +33,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        System.out.println("DEBUG JWT Filter: Processing request: " + request.getMethod() + " " + request.getRequestURI());
+        log.debug("Processing request: {} {}", request.getMethod(), request.getRequestURI());
         final String authHeader = request.getHeader("Authorization");
-        System.out.println("DEBUG JWT Filter: Auth header: " + authHeader);
-        System.out.println("DEBUG JWT Filter: Starts with Bearer? " + (authHeader != null && authHeader.startsWith("Bearer ")));
+        log.debug("Auth header: {}", authHeader);
+        log.debug("Starts with Bearer? {}", authHeader != null && authHeader.startsWith("Bearer "));
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("DEBUG JWT Filter: No Bearer token, continuing chain");
+            log.debug("No Bearer token, continuing chain");
             filterChain.doFilter(request, response);
             return;
         }
@@ -46,17 +48,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (!jwtService.isAccessToken(jwt)) {
-                System.out.println("DEBUG JWT: Not an access token");
+                log.debug("Not an access token");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             final String userEmail = jwtService.extractUsername(jwt);
-            System.out.println("DEBUG JWT: Extracted email: " + userEmail);
+            log.debug("Extracted email: {}", userEmail);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                System.out.println("DEBUG JWT: Loaded user details, authorities: " + userDetails.getAuthorities());
+                log.debug("Loaded user details, authorities: {}", userDetails.getAuthorities());
 
                 if (jwtService.isTokenValid(jwt, (CustomUserDetails) userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -66,13 +68,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    System.out.println("DEBUG JWT: Authentication set successfully");
+                    log.debug("Authentication set successfully");
                 } else {
-                    System.out.println("DEBUG JWT: Token validation failed");
+                    log.debug("Token validation failed");
                 }
             }
         } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
-            System.out.println("DEBUG JWT: Exception - " + e.getMessage());
+            log.debug("Exception - {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 

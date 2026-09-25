@@ -2,6 +2,7 @@ package org.example.urbanfixbackend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.dto.request.ReporteCreateDTO;
 import org.example.urbanfixbackend.dto.request.ReporteUpdateDTO;
 import org.example.urbanfixbackend.dto.response.ReporteDetailDTO;
@@ -20,14 +21,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/reportes")
 @RequiredArgsConstructor
+@Slf4j
 public class ReporteController {
 
     private final ReporteService reporteService;
 
     @PostMapping
     public ResponseEntity<ReporteResponseDTO> createReporte(@Valid @RequestBody ReporteCreateDTO dto) {
-        System.out.println("DEBUG Reporte: User authorities: " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
-        System.out.println("DEBUG Reporte: Auth: " + SecurityContextHolder.getContext().getAuthentication());
+        log.debug("User authorities: {}", SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+        log.debug("Auth: {}", SecurityContextHolder.getContext().getAuthentication());
         Long usuarioId = SecurityUtils.getCurrentUserId();
         ReporteResponseDTO response = reporteService.createReporte(dto, usuarioId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

@@ -1,0 +1,132 @@
+TO: test@example.com
+SUBJECT: Actualización de reporte: Bache en la calle
+TIMESTAMP: 2026-09-25T12:15:35.619075119
+========================================
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualización de Reporte - UrbanFix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+            margin: -30px -30px 30px -30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .status-reporte {
+            background-color: #f39c12;
+            color: white;
+        }
+        .status-proceso {
+            background-color: #3498db;
+            color: white;
+        }
+        .status-resuelto {
+            background-color: #27ae60;
+            color: white;
+        }
+        .reporte-card {
+            background-color: white;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .reporte-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .reporte-info {
+            font-size: 14px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">📋</div>
+            <h1>Actualización de Reporte</h1>
+        </div>
+        <div class="content">
+            <p>Hola,</p>
+            <p>Tenemos buenas noticias sobre tu reporte en <strong>UrbanFix</strong>.</p>
+            
+            <div class="reporte-card">
+                <div class="reporte-title">Bache en la calle</div>
+                <div class="reporte-info">
+                    <p><strong>Estado anterior:</strong> <span class="status-badge status-reporte">REPORTADO</span></p>
+                    <p><strong>Nuevo estado:</strong> <span class="status-badge status-proceso">EN_PROCESO</span></p>
+                </div>
+            </div>
+            
+            <p>
+                Tu reporte está siendo atendido por las autoridades municipales. Un técnico ha sido asignado para revisar el problema.
+            </p>
+            
+            
+            <a href="https://urbanfix.com/reportes" class="button">Ver Detalles del Reporte</a>
+        </div>
+        <div class="footer">
+            <p>Este es un correo automático, por favor no respondas.</p>
+            <p>&copy; 2024 UrbanFix. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
