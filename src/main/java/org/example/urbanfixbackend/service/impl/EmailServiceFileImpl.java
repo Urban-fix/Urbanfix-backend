@@ -28,6 +28,10 @@ public class EmailServiceFileImpl implements EmailService {
     @Value("${email.output.directory:email-output}")
     private String emailOutputDirectory;
 
+    public void setEmailOutputDirectory(String emailOutputDirectory) {
+        this.emailOutputDirectory = emailOutputDirectory;
+    }
+
     @Override
     public void sendWelcomeEmail(String to, String nombre) {
         try {

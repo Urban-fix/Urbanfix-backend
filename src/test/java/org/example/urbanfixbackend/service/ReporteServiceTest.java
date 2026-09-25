@@ -1,7 +1,9 @@
 package org.example.urbanfixbackend.service;
 
+import org.example.urbanfixbackend.dto.request.CambioEstadoDTO;
 import org.example.urbanfixbackend.dto.request.ReporteCreateDTO;
 import org.example.urbanfixbackend.dto.request.ReporteUpdateDTO;
+import org.example.urbanfixbackend.dto.response.ReporteDetailDTO;
 import org.example.urbanfixbackend.dto.response.ReporteResponseDTO;
 import org.example.urbanfixbackend.entity.Categoria;
 import org.example.urbanfixbackend.entity.Reporte;
@@ -23,6 +25,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -172,5 +176,106 @@ class ReporteServiceTest {
         when(reporteRepository.findById(1L)).thenReturn(Optional.of(reporte));
         
         assertThrows(UnauthorizedActionException.class, () -> reporteService.deleteReporte(1L, 1L));
+    }
+    
+    @Test
+    void getReporteDetailById_Success() {
+        when(reporteRepository.findById(1L)).thenReturn(Optional.of(reporte));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        
+        ReporteDetailDTO result = reporteService.getReporteDetailById(1L);
+        
+        assertNotNull(result);
+        assertEquals(1L, result.id());
+        assertEquals(5L, result.confirmacionesCount());
+    }
+    
+    @Test
+    void getReporteDetailById_NotFound() {
+        when(reporteRepository.findById(1L)).thenReturn(Optional.empty());
+        
+        assertThrows(ReporteNotFoundException.class, () -> reporteService.getReporteDetailById(1L));
+    }
+    
+    @Test
+    void getAllReportes_Success() {
+        Reporte reporte2 = new Reporte();
+        reporte2.setId(2L);
+        reporte2.setTitulo("Otro reporte");
+        reporte2.setEstadoActual(EstadoReporte.REPORTADO);
+        
+        when(reporteRepository.findAll()).thenReturn(Arrays.asList(reporte, reporte2));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        when(confirmacionRepository.countByReporteId(2L)).thenReturn(3L);
+        
+        List<ReporteResponseDTO> result = reporteService.getAllReportes();
+        
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+    
+    @Test
+    void getReportesByEstado_Success() {
+        when(reporteRepository.findByEstadoActual(EstadoReporte.REPORTADO)).thenReturn(Arrays.asList(reporte));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        
+        List<ReporteResponseDTO> result = reporteService.getReportesByEstado(EstadoReporte.REPORTADO);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(EstadoReporte.REPORTADO, reporte.getEstadoActual());
+    }
+    
+    @Test
+    void getReportesByCategoria_Success() {
+        when(reporteRepository.findByCategoriaId(1L)).thenReturn(Arrays.asList(reporte));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        
+        List<ReporteResponseDTO> result = reporteService.getReportesByCategoria(1L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void getReportesByZona_Success() {
+        when(reporteRepository.findByZonaId(1L)).thenReturn(Arrays.asList(reporte));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        
+        List<ReporteResponseDTO> result = reporteService.getReportesByZona(1L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void getReportesByUsuario_Success() {
+        when(reporteRepository.findByUsuarioId(1L)).thenReturn(Arrays.asList(reporte));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        
+        List<ReporteResponseDTO> result = reporteService.getReportesByUsuario(1L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void searchReportes_Success() {
+        when(reporteRepository.searchByTituloOrDescripcion("bache", "bache")).thenReturn(Arrays.asList(reporte));
+        when(confirmacionRepository.countByReporteId(1L)).thenReturn(5L);
+        
+        List<ReporteResponseDTO> result = reporteService.searchReportes("bache");
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void cambiarEstado_Success() {
+        CambioEstadoDTO cambioEstadoDTO = new CambioEstadoDTO(EstadoReporte.EN_PROCESO);
+
+        reporteService.cambiarEstado(1L, EstadoReporte.EN_PROCESO, 1L);
+
+        verify(estadoHistorialService, times(1)).cambiarEstado(eq(1L), any(CambioEstadoDTO.class), eq(1L));
     }
 }
