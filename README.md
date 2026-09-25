@@ -4,9 +4,9 @@
 CS 2031 Desarrollo Basado en Plataforma
 
 ## Integrantes
-- [Nombre del Integrante 1]
-- [Nombre del Integrante 2]
-- [Nombre del Integrante 3]
+- Sabino Guardian Marco Antonio
+- Huaroc Enciso Rodolfo Elard
+- Centti Torres Edmundo Andre
 
 ---
 
@@ -493,7 +493,7 @@ Aunque el MVP está completo y funcional, existen áreas identificadas para mejo
 
 ### Licencia
 
-Este proyecto se distribuye bajo la licencia MIT. Para más detalles, consultar el archivo LICENSE en el repositorio.
+Este proyecto se distribuye bajo la licencia MIT.
 
 ### Referencias
 
