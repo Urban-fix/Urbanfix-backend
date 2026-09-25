@@ -33,10 +33,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        log.debug("Processing request: {} {}", request.getMethod(), request.getRequestURI());
+        log.debug("Procesando request: {} {}", request.getMethod(), request.getRequestURI());
         final String authHeader = request.getHeader("Authorization");
         log.debug("Auth header: {}", authHeader);
-        log.debug("Starts with Bearer? {}", authHeader != null && authHeader.startsWith("Bearer "));
+        log.debug("Empezar con Bearer? {}", authHeader != null && authHeader.startsWith("Bearer "));
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.debug("No Bearer token, continuing chain");

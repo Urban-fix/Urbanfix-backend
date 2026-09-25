@@ -2,11 +2,18 @@ package org.example.urbanfixbackend.service;
 
 import io.jsonwebtoken.JwtException;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
+import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
+import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.response.AuthResponseDTO;
+import org.example.urbanfixbackend.dto.response.PasswordResetResponseDTO;
+import org.example.urbanfixbackend.entity.PasswordResetToken;
 import org.example.urbanfixbackend.entity.Usuario;
 import org.example.urbanfixbackend.entity.enums.Rol;
 import org.example.urbanfixbackend.exception.EmailAlreadyExistsException;
+import org.example.urbanfixbackend.exception.TokenExpiredException;
+import org.example.urbanfixbackend.exception.UsuarioNotFoundException;
+import org.example.urbanfixbackend.repository.PasswordResetTokenRepository;
 import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.security.CustomUserDetails;
 import org.example.urbanfixbackend.security.jwt.JwtService;
@@ -22,6 +29,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,19 +42,25 @@ class AuthServiceTest {
 
     @Mock
     private UsuarioRepository usuarioRepository;
-    
+
     @Mock
     private PasswordEncoder passwordEncoder;
-    
+
     @Mock
     private JwtService jwtService;
-    
+
     @Mock
     private AuthenticationManager authenticationManager;
-    
+
     @Mock
     private org.springframework.context.ApplicationEventPublisher eventPublisher;
-    
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private AuthServiceImpl authService;
     
@@ -158,8 +172,89 @@ class AuthServiceTest {
     void refreshToken_InvalidToken() {
         when(jwtService.isRefreshToken("invalidToken")).thenReturn(true);
         when(jwtService.extractUsername("invalidToken")).thenThrow(new JwtException("Invalid token"));
-        
-        assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class, 
+
+        assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
                 () -> authService.refreshToken("invalidToken"));
+    }
+
+    @Test
+    void refreshToken_ExpiredToken() {
+        when(jwtService.isRefreshToken("expiredToken")).thenReturn(true);
+        when(jwtService.extractUsername("expiredToken")).thenThrow(new io.jsonwebtoken.ExpiredJwtException(null, null, "Expired"));
+
+        assertThrows(TokenExpiredException.class,
+                () -> authService.refreshToken("expiredToken"));
+    }
+
+    @Test
+    void requestPasswordReset_Success() {
+        PasswordResetRequestDTO requestDTO = new PasswordResetRequestDTO("test@example.com");
+
+        when(usuarioRepository.findByEmail("test@example.com")).thenReturn(Optional.of(usuario));
+        doNothing().when(passwordResetTokenRepository).deleteByUsuario(any(Usuario.class));
+        when(passwordResetTokenRepository.save(any(PasswordResetToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PasswordResetResponseDTO result = authService.requestPasswordReset(requestDTO);
+
+        assertNotNull(result);
+        assertTrue(result.message().contains("test@example.com"));
+        assertNotNull(result.token());
+        verify(passwordResetTokenRepository, times(1)).save(any(PasswordResetToken.class));
+        verify(emailService, times(1)).sendPasswordResetEmail(eq("test@example.com"), anyString(), anyString());
+    }
+
+    @Test
+    void requestPasswordReset_UserNotFound() {
+        PasswordResetRequestDTO requestDTO = new PasswordResetRequestDTO("nonexistent@example.com");
+
+        when(usuarioRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(UsuarioNotFoundException.class,
+                () -> authService.requestPasswordReset(requestDTO));
+    }
+
+    @Test
+    void confirmPasswordReset_Success() {
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken("valid-token");
+        resetToken.setUsuario(usuario);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("valid-token", "NewPassword123");
+
+        when(passwordResetTokenRepository.findByToken("valid-token")).thenReturn(Optional.of(resetToken));
+        when(passwordEncoder.encode("NewPassword123")).thenReturn("encodedNewPassword");
+
+        authService.confirmPasswordReset(confirmDTO);
+
+        verify(passwordEncoder, times(1)).encode("NewPassword123");
+        verify(usuarioRepository, times(1)).save(usuario);
+        verify(passwordResetTokenRepository, times(1)).delete(resetToken);
+    }
+
+    @Test
+    void confirmPasswordReset_InvalidToken() {
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("invalid-token", "NewPassword123");
+
+        when(passwordResetTokenRepository.findByToken("invalid-token")).thenReturn(Optional.empty());
+
+        assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
+                () -> authService.confirmPasswordReset(confirmDTO));
+    }
+
+    @Test
+    void confirmPasswordReset_ExpiredToken() {
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken("expired-token");
+        resetToken.setUsuario(usuario);
+        resetToken.setExpiryDate(LocalDateTime.now().minusMinutes(1));
+
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("expired-token", "NewPassword123");
+
+        when(passwordResetTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(resetToken));
+
+        assertThrows(TokenExpiredException.class,
+                () -> authService.confirmPasswordReset(confirmDTO));
+        verify(passwordResetTokenRepository, times(1)).delete(resetToken);
     }
 }

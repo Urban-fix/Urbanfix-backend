@@ -45,11 +45,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/password-reset/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        // Solo LECTURA es publica. Crear/editar/cambiar estado/borrar exige estar autenticado,
-                        // y el rol especifico (ej. ADMIN_MUNICIPAL, TECNICO, SUPERVISOR) se controla con @PreAuthorize en cada endpoint.
                         .requestMatchers(HttpMethod.GET, "/api/v1/categorias/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/zonas/**").permitAll()
-                        // /reportes/mis-reportes requiere autenticación (no es público)
+                        // /reportes/mis-reportes requiere autenticación
                         .requestMatchers("/api/v1/reportes/mis-reportes").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/reportes/**").permitAll()
                         .anyRequest().authenticated()
