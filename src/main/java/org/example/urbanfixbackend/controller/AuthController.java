@@ -7,6 +7,7 @@ import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.response.AuthResponseDTO;
+import org.example.urbanfixbackend.dto.response.PasswordResetResponseDTO;
 import org.example.urbanfixbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,9 +42,9 @@ public class AuthController {
     }
 
     @PostMapping("/password-reset/request")
-    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequestDTO request) {
-        authService.requestPasswordReset(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<PasswordResetResponseDTO> requestPasswordReset(@Valid @RequestBody PasswordResetRequestDTO request) {
+        PasswordResetResponseDTO response = authService.requestPasswordReset(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/password-reset/confirm")

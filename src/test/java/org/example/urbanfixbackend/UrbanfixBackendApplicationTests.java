@@ -1,5 +1,6 @@
 package org.example.urbanfixbackend;
 
+import org.example.urbanfixbackend.support.TestPropertyRegistrar;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -23,9 +24,7 @@ class UrbanfixBackendApplicationTests {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("jwt.secret", () -> "test-secret-key-for-testing-purposes-only");
-        registry.add("jwt.expiration-access", () -> "3600000");
-        registry.add("jwt.expiration-refresh", () -> "86400000");
+        TestPropertyRegistrar.registerJwtAndMail(registry);
     }
 
     @Test

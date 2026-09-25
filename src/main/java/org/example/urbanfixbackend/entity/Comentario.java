@@ -27,7 +27,7 @@ public class Comentario {
     @JoinColumn(name = "reporte_id", nullable = false)
     private Reporte reporte;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
     

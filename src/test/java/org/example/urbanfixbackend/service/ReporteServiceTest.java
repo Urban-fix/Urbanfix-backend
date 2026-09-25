@@ -71,7 +71,7 @@ class ReporteServiceTest {
         
         zona = new Zona();
         zona.setId(1L);
-        zona.setDistrito("Miraflores");
+        zona.setNombre("Miraflores");
         
         reporte = new Reporte();
         reporte.setId(1L);

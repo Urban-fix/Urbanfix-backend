@@ -68,19 +68,20 @@ class AuthServiceTest {
                 "Test",
                 "User",
                 "test@example.com",
-                "password123"
+                "Password123",
+                Rol.CIUDADANO
         );
         
         loginDTO = new LoginRequestDTO(
                 "test@example.com",
-                "password123"
+                "Password123"
         );
     }
     
     @Test
     void register_Success() {
         when(usuarioRepository.existsByEmail("test@example.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when(passwordEncoder.encode("Password123")).thenReturn("encodedPassword");
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
         when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("accessToken");
         when(jwtService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refreshToken");

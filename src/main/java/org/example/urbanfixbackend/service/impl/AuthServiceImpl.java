@@ -8,6 +8,7 @@ import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.response.AuthResponseDTO;
+import org.example.urbanfixbackend.dto.response.PasswordResetResponseDTO;
 import org.example.urbanfixbackend.dto.response.UsuarioResponseDTO;
 import org.example.urbanfixbackend.entity.PasswordResetToken;
 import org.example.urbanfixbackend.entity.Usuario;
@@ -55,7 +56,8 @@ public class AuthServiceImpl implements AuthService {
             throw new EmailAlreadyExistsException(request.email());
         }
 
-        Usuario usuario = UsuarioMapper.toEntity(request, Rol.CIUDADANO);
+        Rol rol = request.rol() != null ? request.rol() : Rol.CIUDADANO;
+        Usuario usuario = UsuarioMapper.toEntity(request, rol);
         usuario.setPassword(passwordEncoder.encode(request.password()));
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
@@ -132,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void requestPasswordReset(PasswordResetRequestDTO request) {
+    public PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request) {
         Usuario usuario = usuarioRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UsuarioNotFoundException("No existe un usuario con el email: " + request.email()));
 
@@ -153,6 +155,11 @@ public class AuthServiceImpl implements AuthService {
         // Enviar email con el enlace de reset
         String resetLink = "https://urbanfix.com/reset-password?token=" + token;
         emailService.sendPasswordResetEmail(usuario.getEmail(), usuario.getNombre(), resetLink);
+
+        return new PasswordResetResponseDTO(
+                "Email de recuperación enviado a " + usuario.getEmail(),
+                token
+        );
     }
 
     @Override

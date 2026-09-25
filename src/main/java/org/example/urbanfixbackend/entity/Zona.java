@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "zonas", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "distrito")
+    @UniqueConstraint(columnNames = "nombre")
 })
 @Data
 @NoArgsConstructor
@@ -16,10 +16,10 @@ public class Zona {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false, unique = true, length = 100)
-    private String distrito;
-    
+    private String nombre;
+
     @Column(length = 255)
     private String coordenadasReferencia;
 }

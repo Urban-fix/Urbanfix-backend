@@ -8,6 +8,7 @@ import org.example.urbanfixbackend.service.ZonaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,8 @@ public class ZonaController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN_MUNICIPAL', 'SUPERVISOR')")
     public ResponseEntity<ZonaResponseDTO> createZona(@Valid @RequestBody ZonaCreateDTO dto) {
+        System.out.println("DEBUG: User authorities: " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+        System.out.println("DEBUG: User principal: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         ZonaResponseDTO response = zonaService.createZona(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
