@@ -1,286 +1,471 @@
-# 🏙️ UrbanFix Backend
+# 🏙️ UrbanFix — Sistema de Reportes de Incidencias Urbanas
 
-Backend REST para **UrbanFix**, una plataforma orientada a la gestión colaborativa de incidencias urbanas.
+## CS 2031 — Desarrollo Basado en Plataforma
 
-UrbanFix permite que los ciudadanos reporten problemas de infraestructura o servicios públicos —como baches, fallas de alumbrado, acumulación de residuos o problemas en espacios públicos— y proporciona herramientas para que personal municipal pueda gestionar, supervisar y actualizar el estado de estos reportes.
+### Backend — Proyecto 1
 
-El backend está desarrollado con **Java 21**, **Spring Boot**, **Spring Security**, **Spring Data JPA** y **PostgreSQL**, siguiendo una arquitectura por capas y utilizando autenticación mediante **JWT**.
+**Integrantes:**
 
----
+- Rodolfo Elard Huaroc Enciso 202220307
+- [Nombre completo del integrante 2]
+- [Nombre completo del integrante 3]
+- [Nombre completo del integrante 4]
+- [Nombre completo del integrante 5]
 
-## 📑 Tabla de contenidos
-
-- [Objetivo del proyecto](#-objetivo-del-proyecto)
-- [Características principales](#-características-principales)
-- [Tecnologías](#-tecnologías)
-- [Arquitectura](#-arquitectura)
-- [Modelo de datos](#-modelo-de-datos)
-- [Seguridad y autenticación](#-seguridad-y-autenticación)
-- [Roles](#-roles)
-- [Estados de un reporte](#-estados-de-un-reporte)
-- [API REST](#-api-rest)
-- [Variables de entorno](#-variables-de-entorno)
-- [Instalación](#-instalación)
-- [Ejecución con Docker](#-ejecución-con-docker)
-- [Ejecución del backend](#-ejecución-del-backend)
-- [Pruebas](#-pruebas)
-- [Postman](#-postman)
-- [Eventos y notificaciones](#-eventos-y-notificaciones)
-- [CI/CD](#-cicd)
-- [Estructura del proyecto](#-estructura-del-proyecto)
-- [Flujo de trabajo con Git](#-flujo-de-trabajo-con-git)
-- [Estado actual](#-estado-actual)
+**Repositorio Backend:** `Urban-fix/Urbanfix-backend`
 
 ---
 
-# 🎯 Objetivo del proyecto
+# 📑 Índice
 
-En muchas ciudades existen problemas cotidianos como calles deterioradas, falta de iluminación, acumulación de basura o daños en espacios públicos.
-
-Sin una plataforma centralizada, los ciudadanos pueden tener dificultades para informar estos problemas y las autoridades municipales pueden tener dificultades para priorizarlos y hacer seguimiento de su resolución.
-
-**UrbanFix** busca centralizar este proceso permitiendo:
-
-- registrar incidencias urbanas;
-- ubicar cada reporte mediante coordenadas;
-- clasificarlos por categoría y zona;
-- consultar reportes existentes;
-- confirmar problemas reportados por otros ciudadanos;
-- agregar comentarios;
-- mantener un historial de cambios de estado;
-- gestionar los reportes mediante distintos roles;
-- notificar determinados eventos mediante correo electrónico.
+1. [Introducción](#1-introducción)
+2. [Identificación del Problema o Necesidad](#2-identificación-del-problema-o-necesidad)
+3. [Descripción de la Solución](#3-descripción-de-la-solución)
+4. [Tecnologías Utilizadas](#4-tecnologías-utilizadas)
+5. [Arquitectura del Sistema](#5-arquitectura-del-sistema)
+6. [Modelo de Entidades](#6-modelo-de-entidades)
+7. [Manejo de Errores](#7-manejo-de-errores)
+8. [Medidas de Seguridad Implementadas](#8-medidas-de-seguridad-implementadas)
+9. [Eventos y Asincronía](#9-eventos-y-asincronía)
+10. [API REST](#10-api-rest)
+11. [Instalación y Ejecución Local](#11-instalación-y-ejecución-local)
+12. [Pruebas](#12-pruebas)
+13. [Postman](#13-postman)
+14. [GitHub y Gestión del Proyecto](#14-github-y-gestión-del-proyecto)
+15. [CI/CD y Deployment](#15-cicd-y-deployment)
+16. [Conclusiones](#16-conclusiones)
+17. [Apéndices](#17-apéndices)
 
 ---
 
-# ✨ Características principales
+# 1. Introducción
 
-Actualmente el backend incluye:
+## Contexto
 
-- Registro e inicio de sesión de usuarios.
-- Autenticación mediante JWT.
-- Access Token y Refresh Token.
+Las ciudades presentan constantemente incidencias relacionadas con el mantenimiento de la infraestructura y los servicios públicos, como baches, fallas de alumbrado, acumulación de residuos, deterioro de espacios públicos o problemas relacionados con agua y desagüe.
+
+En muchos casos, los ciudadanos no cuentan con un mecanismo centralizado que permita registrar estas incidencias, conocer su estado o visualizar si otros ciudadanos han reportado el mismo problema.
+
+Por otro lado, las autoridades y responsables municipales necesitan mecanismos que permitan organizar los reportes, clasificarlos, actualizar su estado y mantener un historial de las acciones realizadas.
+
+**UrbanFix** surge como una plataforma que busca facilitar la comunicación entre ciudadanos y responsables de la gestión urbana mediante un sistema centralizado de reportes.
+
+## Objetivos del proyecto
+
+El objetivo principal de UrbanFix es desarrollar un backend capaz de gestionar incidencias urbanas mediante una API REST segura y escalable.
+
+Los objetivos específicos son:
+
+- Permitir el registro y autenticación de usuarios.
+- Permitir que los ciudadanos creen reportes de incidencias.
+- Asociar cada reporte con una categoría y una zona.
+- Almacenar las coordenadas geográficas de cada incidencia.
+- Permitir búsquedas y filtros de reportes.
+- Permitir que otros ciudadanos confirmen una incidencia.
+- Permitir comentarios en los reportes.
+- Mantener un historial de cambios de estado.
+- Implementar diferentes roles y permisos.
+- Enviar notificaciones asociadas a determinados eventos.
+- Aplicar una arquitectura organizada que facilite el mantenimiento y testing.
+
+---
+
+# 2. Identificación del Problema o Necesidad
+
+## Descripción del problema
+
+Los problemas urbanos suelen ser reportados mediante diferentes canales, como llamadas, mensajes, redes sociales o atención presencial. Esto puede provocar pérdida de información, duplicidad de reportes y poca visibilidad sobre el progreso de cada incidencia.
+
+Además, un ciudadano normalmente no dispone de una forma sencilla de saber si otro usuario ya informó el mismo problema o si la municipalidad comenzó a atenderlo.
+
+También existe una necesidad administrativa. Los responsables municipales requieren información organizada para clasificar problemas, consultar su ubicación y realizar seguimiento de los cambios realizados.
+
+## Justificación
+
+Centralizar esta información permite mejorar la comunicación entre ciudadanos y responsables municipales.
+
+UrbanFix busca proporcionar un sistema donde los reportes permanezcan registrados y puedan recibir confirmaciones y comentarios de otros usuarios.
+
+Asimismo, el historial de estados permite conservar trazabilidad de la atención de cada incidencia.
+
+La utilización de roles permite separar las acciones que puede realizar un ciudadano de aquellas reservadas para usuarios responsables de administrar o supervisar las incidencias.
+
+---
+
+# 3. Descripción de la Solución
+
+UrbanFix implementa una API REST mediante la cual un cliente frontend puede comunicarse con el backend.
+
+Entre las principales funcionalidades implementadas se encuentran:
+
+- Registro de usuarios.
+- Inicio de sesión.
+- Access Token mediante JWT.
+- Refresh Token.
 - Recuperación de contraseña.
-- Control de acceso basado en roles.
-- Creación, consulta, edición y eliminación de reportes.
+- Gestión de roles.
+- Creación de reportes.
+- Actualización de reportes.
+- Eliminación de reportes.
+- Consulta individual y general de reportes.
+- Consulta detallada de un reporte.
+- Filtros por estado, categoría, zona y usuario.
 - Búsqueda de reportes.
-- Filtrado por:
-  - estado;
-  - categoría;
-  - zona;
-  - usuario.
 - Consulta de reportes creados por el usuario autenticado.
 - Gestión de categorías.
 - Gestión de zonas.
-- Confirmación de reportes por ciudadanos.
-- Prevención de confirmaciones duplicadas.
-- Comentarios asociados a reportes.
+- Confirmaciones de reportes.
+- Eliminación de confirmaciones.
+- Conteo de confirmaciones.
+- Comentarios.
+- Eliminación de comentarios.
 - Historial de cambios de estado.
-- Notificaciones mediante eventos asíncronos.
-- Envío o generación de correos electrónicos.
-- Validación de DTOs.
-- Manejo centralizado de excepciones.
-- Pruebas unitarias.
-- Pruebas de integración.
-- PostgreSQL mediante Docker Compose.
-- Colección de Postman.
-- Integración continua con GitHub Actions.
-- Generación automática de artefactos `.jar`.
+- Notificaciones mediante eventos.
+- Notificaciones por correo electrónico.
+- Manejo global de errores.
+- Tests unitarios y de integración.
 
 ---
 
-# 🛠️ Tecnologías
+# 4. Tecnologías Utilizadas
 
 | Tecnología | Uso |
 |---|---|
 | Java 21 | Lenguaje principal |
-| Spring Boot 4 | Framework backend |
-| Spring Web MVC | API REST |
-| Spring Data JPA | Acceso y persistencia de datos |
+| Spring Boot | Framework para el backend |
+| Spring Web MVC | Implementación de la API REST |
+| Spring Data JPA | Persistencia y acceso a datos |
 | Hibernate | ORM |
-| Spring Security | Seguridad |
-| JWT / JJWT | Autenticación basada en tokens |
+| Spring Security | Autenticación y autorización |
+| JWT / JJWT | Manejo de tokens |
+| BCrypt | Hash de contraseñas |
 | PostgreSQL 16 | Base de datos |
-| Docker / Docker Compose | Base de datos local |
 | Maven | Gestión de dependencias y build |
 | Lombok | Reducción de código repetitivo |
-| Jakarta Validation | Validación de solicitudes |
+| Jakarta Validation | Validación de DTOs |
 | Spring Mail | Envío de correos |
-| Thymeleaf | Templates HTML para emails |
-| JUnit | Pruebas |
-| Mockito | Mocking en pruebas unitarias |
+| Thymeleaf | Plantillas HTML para correos |
+| Docker Compose | Base de datos para desarrollo |
+| JUnit | Testing |
+| Mockito | Pruebas unitarias |
 | Testcontainers | Pruebas de integración |
 | JaCoCo | Cobertura de pruebas |
+| Postman | Documentación y pruebas de API |
 | GitHub Actions | Integración continua |
 
 ---
 
-# 🏗️ Arquitectura
+# 5. Arquitectura del Sistema
 
-El proyecto utiliza una **arquitectura por capas**, separando las responsabilidades del sistema.
+El backend utiliza una arquitectura por capas.
 
 ```text
-HTTP Request
-     │
-     ▼
+Cliente
+   │
+   ▼
 Controller
-     │
-     ▼
+   │
+   ▼
 Service
-     │
-     ▼
+   │
+   ▼
 Repository
-     │
-     ▼
+   │
+   ▼
 PostgreSQL
 ```
 
-Además, los datos intercambiados mediante la API utilizan DTOs para evitar exponer directamente las entidades persistentes.
+Las principales responsabilidades son:
+
+### Controller
+
+Recibe las solicitudes HTTP, obtiene los parámetros o DTOs necesarios y delega las operaciones hacia la capa de servicios.
+
+### Service
+
+Contiene la lógica de negocio de la aplicación.
+
+Por ejemplo:
+
+- creación y actualización de reportes;
+- validación de operaciones;
+- cambio de estados;
+- autenticación;
+- confirmaciones;
+- comentarios.
+
+### Repository
+
+Se encarga del acceso a la base de datos mediante Spring Data JPA.
+
+### DTO
+
+Se utilizan DTOs especializados para evitar exponer directamente las entidades JPA.
+
+El proyecto separa los DTOs en:
 
 ```text
-Request
-   │
-   ▼
-Request DTO
-   │
-   ▼
-Controller
-   │
-   ▼
-Service
-   │
-   ▼
-Mapper
-   │
-   ▼
-Entity
-   │
-   ▼
-Repository
+dto/
+├── request/
+└── response/
 ```
 
-Esta separación facilita el mantenimiento, las pruebas y la evolución del sistema.
+### Mapper
+
+Los mappers realizan la conversión entre entidades y DTOs.
+
+Esta organización ayuda a mantener un bajo acoplamiento y una correcta separación de responsabilidades.
 
 ---
 
-# 🗃️ Modelo de datos
+# 6. Modelo de Entidades
 
-Las principales entidades del sistema son:
+El sistema contiene más de seis entidades principales relacionadas con la lógica del negocio.
 
-### Usuario
+```mermaid
+erDiagram
+    USUARIO ||--o{ REPORTE : crea
+    USUARIO ||--o{ CONFIRMACION : confirma
+    USUARIO ||--o{ COMENTARIO : comenta
+    USUARIO ||--o{ ESTADO_HISTORIAL : registra_cambio
 
-Representa una persona registrada en UrbanFix.
+    CATEGORIA ||--o{ REPORTE : clasifica
+    ZONA ||--o{ REPORTE : ubica
 
-Contiene información como:
+    REPORTE ||--o{ ESTADO_HISTORIAL : tiene
+    REPORTE ||--o{ CONFIRMACION : recibe
+    REPORTE ||--o{ COMENTARIO : recibe
 
-- nombre;
-- apellido;
-- email;
-- contraseña cifrada;
-- rol;
-- fecha de registro.
+    USUARIO {
+        Long id PK
+        String nombre
+        String email UK
+        String password
+        Rol rol
+        LocalDateTime fechaRegistro
+    }
 
-### Reporte
+    REPORTE {
+        Long id PK
+        String titulo
+        String descripcion
+        Double latitud
+        Double longitud
+        String fotoUrl
+        EstadoReporte estadoActual
+        LocalDateTime fechaCreacion
+        Long usuarioId FK
+        Long categoriaId FK
+        Long zonaId FK
+    }
 
-Representa una incidencia urbana reportada.
+    CATEGORIA {
+        Long id PK
+        String nombre
+        String descripcion
+    }
 
-Incluye:
+    ZONA {
+        Long id PK
+        String nombre
+        String coordenadasReferencia
+    }
 
-- título;
-- descripción;
-- latitud;
-- longitud;
-- URL de fotografía;
-- estado actual;
-- usuario creador;
-- categoría;
-- zona;
-- fecha de creación.
+    ESTADO_HISTORIAL {
+        Long id PK
+        EstadoReporte estadoAnterior
+        EstadoReporte estadoNuevo
+        LocalDateTime fechaCambio
+        Long reporteId FK
+        Long usuarioId FK
+    }
 
-### Categoria
+    CONFIRMACION {
+        Long id PK
+        LocalDateTime fechaConfirmacion
+        Long reporteId FK
+        Long usuarioId FK
+    }
 
-Permite clasificar los reportes según el tipo de problema urbano.
+    COMENTARIO {
+        Long id PK
+        String contenido
+        LocalDateTime fechaCreacion
+        Long reporteId FK
+        Long usuarioId FK
+    }
+```
 
-Ejemplos iniciales:
 
-- Alumbrado Público;
-- Recolección de Basura;
-- Calzadas y Aceras;
-- Espacios Públicos;
-- Señalización;
-- Agua y Cloacas.
+## Usuario
 
-### Zona
+Representa los usuarios registrados.
 
-Permite agrupar reportes geográficamente.
+Principales atributos:
 
-El backend crea automáticamente algunas zonas iniciales cuando la base de datos se encuentra vacía.
+- `id`
+- `nombre`
+- `apellido`
+- `email`
+- `password`
+- `rol`
+- `fechaRegistro`
 
-### EstadoHistorial
+El correo electrónico es único.
 
-Registra los cambios de estado de un reporte.
+## Reporte
 
-Permite conocer:
+Representa una incidencia urbana.
+
+Contiene:
+
+- `id`
+- `titulo`
+- `descripcion`
+- `latitud`
+- `longitud`
+- `fotoUrl`
+- `fechaCreacion`
+- `estadoActual`
+- usuario
+- categoría
+- zona
+
+Además, mantiene relaciones con comentarios, confirmaciones e historial.
+
+## Categoria
+
+Clasifica los tipos de incidencias urbanas.
+
+Ejemplos:
+
+- Alumbrado Público
+- Recolección de Basura
+- Calzadas y Aceras
+- Espacios Públicos
+- Señalización
+- Agua y Cloacas
+
+## Zona
+
+Representa una zona geográfica donde puede encontrarse una incidencia.
+
+## Comentario
+
+Permite que los usuarios participen en un reporte mediante comentarios.
+
+## Confirmacion
+
+Permite que un usuario indique que una incidencia reportada también ha sido observada por él.
+
+Existe una restricción única sobre:
+
+```text
+reporte_id + usuario_id
+```
+
+evitando que un usuario confirme dos veces el mismo reporte.
+
+## EstadoHistorial
+
+Registra los cambios de estado de un reporte, almacenando:
 
 - estado anterior;
 - estado nuevo;
-- usuario que realizó el cambio;
-- fecha del cambio.
+- fecha del cambio;
+- reporte;
+- usuario responsable.
 
-### Confirmacion
+## PasswordResetToken
 
-Permite que otro usuario confirme que un problema reportado realmente existe.
-
-Existe una restricción para evitar que el mismo usuario confirme dos veces el mismo reporte.
-
-### Comentario
-
-Permite agregar comentarios asociados a un reporte.
-
-### PasswordResetToken
-
-Almacena temporalmente los tokens utilizados durante el proceso de recuperación de contraseña.
+Permite gestionar el proceso de recuperación de contraseña mediante tokens con fecha de expiración.
 
 ---
 
-# 🔐 Seguridad y autenticación
+# 7. Manejo de Errores
 
-UrbanFix utiliza **Spring Security + JWT**.
+El backend utiliza excepciones personalizadas y un manejador global de errores.
 
-El flujo general es:
+El objetivo es evitar respuestas inconsistentes y proporcionar al cliente información clara cuando ocurre un error.
+
+Se manejan casos como:
+
+- recursos inexistentes;
+- emails duplicados;
+- credenciales inválidas;
+- operaciones no permitidas;
+- confirmaciones duplicadas;
+- datos de entrada inválidos;
+- coordenadas incorrectas;
+- transiciones de estado inválidas;
+- acciones sin autorización.
+
+El proyecto utiliza un `GlobalExceptionHandler` para centralizar este comportamiento.
+
+Las respuestas de error utilizan un DTO consistente que incluye información como:
 
 ```text
-Usuario
-  │
-  │ POST /login
-  ▼
-Backend
-  │
-  ├── valida credenciales
-  │
-  ├── genera Access Token
-  │
-  └── genera Refresh Token
-          │
-          ▼
-       Cliente
+timestamp
+status
+error
+message
+path
 ```
 
-Para acceder a un endpoint protegido debe enviarse:
+Dependiendo del problema se retornan códigos HTTP como:
+
+```text
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+409 Conflict
+500 Internal Server Error
+```
+
+---
+
+# 8. Medidas de Seguridad Implementadas
+
+UrbanFix utiliza **Spring Security** para proteger la API.
+
+## JWT
+
+Después de autenticarse, el usuario recibe tokens JWT.
+
+Para acceder a endpoints protegidos se utiliza:
 
 ```http
 Authorization: Bearer <access_token>
 ```
 
-Las contraseñas son almacenadas utilizando **BCrypt**.
+El backend incluye:
 
-La aplicación utiliza sesiones **stateless**, por lo que el servidor no mantiene una sesión HTTP tradicional de cada usuario.
+- generación de tokens;
+- validación;
+- expiración;
+- extracción de información del usuario;
+- filtro JWT;
+- `UserDetailsService`;
+- refresh tokens.
 
----
+La clave JWT se obtiene mediante variables de entorno y no se almacena directamente en el código.
 
-# 👥 Roles
+## Contraseñas
 
-Actualmente existen los siguientes roles:
+Las contraseñas no se almacenan en texto plano.
+
+Se utiliza:
+
+```text
+BCrypt
+```
+
+para generar su hash antes de almacenarlas.
+
+## Roles
+
+Los roles existentes son:
 
 ```text
 CIUDADANO
@@ -291,14 +476,9 @@ OPERADOR
 AUDITOR
 ```
 
-Los permisos dependen del endpoint.
+Se utiliza `@PreAuthorize` para restringir operaciones sensibles.
 
-Por ejemplo:
-
-- las consultas de reportes, categorías y zonas pueden ser públicas;
-- crear reportes requiere autenticación;
-- modificar determinados recursos requiere roles administrativos;
-- cambiar el estado de un reporte está permitido para:
+Por ejemplo, el cambio de estado de un reporte puede ser realizado por:
 
 ```text
 ADMIN_MUNICIPAL
@@ -306,26 +486,93 @@ TECNICO
 SUPERVISOR
 ```
 
+## Prevención de vulnerabilidades
+
+### SQL Injection
+
+El acceso a la base de datos se realiza mediante Spring Data JPA y queries parametrizadas, reduciendo el riesgo de construir consultas SQL directamente con datos proporcionados por el usuario.
+
+### Validación de datos
+
+Los DTOs utilizan Jakarta Validation mediante anotaciones y `@Valid`.
+
+Esto permite validar las solicitudes antes de procesarlas.
+
+### CSRF
+
+La API utiliza autenticación JWT stateless. Por ello, la configuración de seguridad deshabilita CSRF para este modelo de autenticación.
+
+### CORS
+
+El backend posee configuración CORS. Durante desarrollo admite diferentes orígenes; para producción debe restringirse al dominio real utilizado por el frontend.
+
+### Información sensible
+
+Las credenciales y claves se almacenan mediante variables de entorno y el archivo `.env` no debe incluirse en Git.
+
 ---
 
-# 🚦 Estados de un reporte
+# 9. Eventos y Asincronía
 
-Un reporte puede encontrarse en alguno de los siguientes estados:
+UrbanFix utiliza eventos para desacoplar determinadas acciones secundarias de la lógica principal.
+
+Un ejemplo es el registro de un usuario:
 
 ```text
-REPORTADO
-EN_PROCESO
-RESUELTO
-RECHAZADO
+Registro
+   │
+   ▼
+UsuarioRegistradoEvent
+   │
+   ▼
+EmailNotificationListener
+   │
+   ▼
+Correo de bienvenida
 ```
 
-Cada modificación genera un registro en el historial del reporte.
+También existe un evento relacionado con los cambios de estado:
+
+```text
+Cambio de estado
+   │
+   ▼
+EstadoCambiadoEvent
+   │
+   ▼
+EstadoNotificationListener
+   │
+   ▼
+Notificación al ciudadano
+```
+
+Los listeners utilizan:
+
+```java
+@Async
+```
+
+para ejecutar determinadas tareas en otro hilo.
+
+También se utiliza:
+
+```java
+@TransactionalEventListener(
+    phase = TransactionPhase.AFTER_COMMIT
+)
+```
+
+Esto permite procesar determinadas notificaciones únicamente después de que la operación principal haya sido confirmada en la base de datos.
+
+El proyecto posee además un `ThreadPoolTaskExecutor` configurado mediante `AsyncConfig`.
+
+La asincronía resulta importante porque tareas como el envío de correos pueden tardar más que una operación normal. Ejecutarlas de manera separada evita bloquear innecesariamente la respuesta HTTP.
 
 ---
 
-# 🌐 API REST
+# 10. API REST
 
-La API se encuentra versionada bajo:
+La API utiliza la siguiente ruta base:
 
 ```text
 /api/v1
@@ -333,128 +580,116 @@ La API se encuentra versionada bajo:
 
 ## Autenticación
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/api/v1/auth/register` | Registrar usuario |
-| POST | `/api/v1/auth/login` | Iniciar sesión |
-| POST | `/api/v1/auth/refresh` | Renovar tokens |
-| POST | `/api/v1/auth/password-reset/request` | Solicitar recuperación de contraseña |
-| POST | `/api/v1/auth/password-reset/confirm` | Confirmar nueva contraseña |
-
----
+| Método | Endpoint |
+|---|---|
+| POST | `/api/v1/auth/register` |
+| POST | `/api/v1/auth/login` |
+| POST | `/api/v1/auth/refresh` |
+| POST | `/api/v1/auth/password-reset/request` |
+| POST | `/api/v1/auth/password-reset/confirm` |
 
 ## Reportes
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/api/v1/reportes` | Crear reporte |
-| GET | `/api/v1/reportes` | Listar reportes |
-| GET | `/api/v1/reportes/{id}` | Obtener reporte |
-| GET | `/api/v1/reportes/{id}/detalle` | Obtener detalle completo |
-| GET | `/api/v1/reportes/mis-reportes` | Obtener reportes del usuario autenticado |
-| PUT | `/api/v1/reportes/{id}` | Actualizar reporte |
-| DELETE | `/api/v1/reportes/{id}` | Eliminar reporte |
-| PATCH | `/api/v1/reportes/{id}/estado` | Cambiar estado |
+| Método | Endpoint |
+|---|---|
+| POST | `/api/v1/reportes` |
+| GET | `/api/v1/reportes` |
+| GET | `/api/v1/reportes/{id}` |
+| GET | `/api/v1/reportes/{id}/detalle` |
+| GET | `/api/v1/reportes/mis-reportes` |
+| PUT | `/api/v1/reportes/{id}` |
+| DELETE | `/api/v1/reportes/{id}` |
+| PATCH | `/api/v1/reportes/{id}/estado` |
 
-Los reportes también admiten filtros mediante query parameters.
+Se permiten filtros como:
 
-Ejemplos:
-
-```http
-GET /api/v1/reportes?estado=REPORTADO
+```text
+?estado=REPORTADO
+?categoriaId=1
+?zonaId=2
+?usuarioId=3
+?search=bache
 ```
-
-```http
-GET /api/v1/reportes?categoriaId=1
-```
-
-```http
-GET /api/v1/reportes?zonaId=2
-```
-
-```http
-GET /api/v1/reportes?usuarioId=5
-```
-
-```http
-GET /api/v1/reportes?search=bache
-```
-
----
 
 ## Categorías
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/api/v1/categorias` | Crear categoría |
-| GET | `/api/v1/categorias` | Listar categorías |
-| GET | `/api/v1/categorias/{id}` | Obtener categoría |
-| PUT | `/api/v1/categorias/{id}` | Actualizar categoría |
-| DELETE | `/api/v1/categorias/{id}` | Eliminar categoría |
-
----
+| Método | Endpoint |
+|---|---|
+| POST | `/api/v1/categorias` |
+| GET | `/api/v1/categorias` |
+| GET | `/api/v1/categorias/{id}` |
+| PUT | `/api/v1/categorias/{id}` |
+| DELETE | `/api/v1/categorias/{id}` |
 
 ## Zonas
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/api/v1/zonas` | Crear zona |
-| GET | `/api/v1/zonas` | Listar zonas |
-| GET | `/api/v1/zonas/{id}` | Obtener zona |
-| PUT | `/api/v1/zonas/{id}` | Actualizar zona |
-| DELETE | `/api/v1/zonas/{id}` | Eliminar zona |
-
----
+| Método | Endpoint |
+|---|---|
+| POST | `/api/v1/zonas` |
+| GET | `/api/v1/zonas` |
+| GET | `/api/v1/zonas/{id}` |
+| PUT | `/api/v1/zonas/{id}` |
+| DELETE | `/api/v1/zonas/{id}` |
 
 ## Confirmaciones
 
-Base:
+Ruta base:
 
 ```text
 /api/v1/reportes/{reporteId}/confirmaciones
 ```
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/` | Confirmar reporte |
-| DELETE | `/` | Eliminar confirmación |
-| GET | `/` | Usuarios que confirmaron |
-| GET | `/conteo` | Número de confirmaciones |
-| GET | `/verificar` | Verificar si el usuario confirmó |
-
----
+| Método | Endpoint |
+|---|---|
+| POST | `/` |
+| DELETE | `/` |
+| GET | `/` |
+| GET | `/conteo` |
+| GET | `/verificar` |
 
 ## Comentarios
 
-Base:
+Ruta base:
 
 ```text
 /api/v1/reportes/{reporteId}/comentarios
 ```
 
-| Método | Endpoint | Descripción |
-|---|---|---|
-| POST | `/` | Crear comentario |
-| GET | `/` | Listar comentarios |
-| DELETE | `/{comentarioId}` | Eliminar comentario |
+| Método | Endpoint |
+|---|---|
+| POST | `/` |
+| GET | `/` |
+| DELETE | `/{comentarioId}` |
 
 ---
 
-# ⚙️ Variables de entorno
+# 11. Instalación y Ejecución Local
 
-El repositorio contiene:
+## Requisitos
 
-```text
-.env.example
-```
+Es necesario tener instalado:
 
-Primero se debe crear un archivo `.env`.
+- Git
+- Java 21
+- Docker
+- Docker Compose
 
-### Linux / macOS
+## Clonar el repositorio
 
 ```bash
-cp .env.example .env
+git clone https://github.com/Urban-fix/Urbanfix-backend.git
+cd Urbanfix-backend
 ```
+
+Para utilizar la rama de desarrollo:
+
+```bash
+git checkout develop
+```
+
+## Configurar variables de entorno
+
+Crear `.env` a partir de `.env.example`.
 
 ### Windows PowerShell
 
@@ -462,7 +697,13 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-Variables principales:
+### Linux/macOS
+
+```bash
+cp .env.example .env
+```
+
+Ejemplo:
 
 ```env
 DB_HOST=localhost
@@ -483,121 +724,64 @@ MAIL_USERNAME=
 MAIL_PASSWORD=
 ```
 
-> ⚠️ Nunca se deben subir credenciales reales al repositorio.
+No se deben subir credenciales reales al repositorio.
 
-Para generar una clave JWT segura puede utilizarse:
-
-```bash
-openssl rand -base64 32
-```
-
----
-
-# 📦 Instalación
-
-## 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/Urban-fix/Urbanfix-backend.git
-```
-
-Entrar al proyecto:
-
-```bash
-cd Urbanfix-backend
-```
-
-El desarrollo principal se realiza sobre la rama:
-
-```bash
-git checkout develop
-```
-
----
-
-# 🐳 Ejecución con Docker
-
-UrbanFix utiliza PostgreSQL 16 mediante Docker Compose.
-
-Primero debe existir el archivo `.env`.
-
-Luego ejecutar:
+## Levantar PostgreSQL
 
 ```bash
 docker compose up -d
 ```
 
-Comprobar los contenedores:
+Comprobar:
 
 ```bash
 docker ps
 ```
 
-Debería aparecer:
+El contenedor debería aparecer como:
 
 ```text
 urbanfix-db
 ```
 
-Para detener la base de datos:
+## Ejecutar el backend
 
-```bash
-docker compose down
-```
-
-Para eliminar también el volumen de datos:
-
-```bash
-docker compose down -v
-```
-
----
-
-# ▶️ Ejecución del backend
-
-## Linux / macOS
-
-```bash
-./mvnw spring-boot:run
-```
-
-## Windows
+### Windows
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-También puede utilizarse Maven instalado globalmente:
+### Linux/macOS
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-Por defecto, Spring Boot inicia el servidor en:
+La API estará disponible por defecto en:
 
 ```text
 http://localhost:8080
 ```
 
-Por ejemplo:
-
-```http
-GET http://localhost:8080/api/v1/reportes
-```
-
 ---
 
-# 🧪 Pruebas
+# 12. Pruebas
 
-El proyecto contiene pruebas unitarias y de integración.
+El proyecto contiene pruebas unitarias y pruebas de integración.
 
-Para ejecutar todos los tests:
+Los servicios evaluados incluyen:
 
-### Linux / macOS
+- AuthService
+- ReporteService
+- CategoriaService
+- ZonaService
+- ComentarioService
+- ConfirmacionService
 
-```bash
-./mvnw test
-```
+También existen pruebas de integración para diferentes controllers.
+
+Para ejecutar las pruebas:
 
 ### Windows
 
@@ -605,50 +789,25 @@ Para ejecutar todos los tests:
 .\mvnw.cmd test
 ```
 
-Para ejecutar todo el proceso de verificación:
+### Linux/macOS
 
 ```bash
-./mvnw clean verify
+./mvnw test
 ```
 
-o:
-
-```powershell
-.\mvnw.cmd clean verify
-```
-
-Las pruebas incluyen servicios como:
-
-```text
-AuthService
-ReporteService
-CategoriaService
-ZonaService
-ComentarioService
-ConfirmacionService
-```
-
-También existen pruebas de integración para distintos controllers.
-
-La cobertura se genera mediante **JaCoCo**.
-
-Después de ejecutar:
+Para realizar una verificación completa:
 
 ```bash
 mvn clean verify
 ```
 
-el reporte puede encontrarse normalmente en:
-
-```text
-target/site/jacoco/index.html
-```
+JaCoCo permite generar información sobre la cobertura de las pruebas.
 
 ---
 
-# 📮 Postman
+# 13. Postman
 
-El proyecto incluye una colección y un environment de Postman:
+El repositorio incluye:
 
 ```text
 postman/
@@ -656,187 +815,33 @@ postman/
 └── UrbanFix.postman_environment.json
 ```
 
-Para utilizarlos:
+Estos archivos permiten importar la API en Postman y probar los diferentes endpoints.
 
-1. Abrir Postman.
-2. Seleccionar **Import**.
-3. Importar ambos archivos.
-4. Seleccionar el environment de UrbanFix.
-5. Ejecutar primero el registro o login.
-6. Utilizar el token recibido para probar los endpoints protegidos.
-
-Esto permite probar los principales flujos de la API sin tener que crear las solicitudes manualmente.
-
----
-
-# 📧 Eventos y notificaciones
-
-UrbanFix implementa una arquitectura basada en eventos para algunas operaciones.
-
-Por ejemplo:
+El flujo recomendado es:
 
 ```text
-Registro de usuario
-       │
-       ▼
-UsuarioRegistradoEvent
-       │
-       ▼
-EmailNotificationListener
-       │
-       ▼
-Email de bienvenida
-```
-
-También existe un evento para los cambios de estado:
-
-```text
-Cambio de estado
-       │
-       ▼
-EstadoCambiadoEvent
-       │
-       ▼
-EstadoNotificationListener
-       │
-       ▼
-Notificación al usuario
-```
-
-Los listeners utilizan ejecución asíncrona mediante:
-
-```java
-@Async
-```
-
-y eventos asociados al resultado exitoso de una transacción mediante:
-
-```java
-@TransactionalEventListener(
-    phase = TransactionPhase.AFTER_COMMIT
-)
-```
-
-Esto evita bloquear innecesariamente la solicitud HTTP mientras se realizan tareas secundarias como las notificaciones.
-
-Para desarrollo y pruebas también existe soporte para guardar correos generados en:
-
-```text
-email-output/
+Registro
+   ↓
+Login
+   ↓
+Obtener JWT
+   ↓
+Crear reporte
+   ↓
+Consultar reporte
+   ↓
+Confirmar / comentar
+   ↓
+Cambiar estado
 ```
 
 ---
 
-# 🔄 CI/CD
+# 14. GitHub y Gestión del Proyecto
 
-El proyecto utiliza **GitHub Actions**.
+Durante el desarrollo se utilizó Git y GitHub para gestionar el código fuente.
 
-El workflow de integración continua se encuentra en:
-
-```text
-.github/workflows/ci.yml
-```
-
-Se ejecuta sobre:
-
-```text
-develop
-main
-```
-
-tanto para `push` como para `pull_request`.
-
-El pipeline realiza:
-
-```text
-Checkout
-   │
-   ▼
-Configurar JDK 21
-   │
-   ▼
-Levantar PostgreSQL 16
-   │
-   ▼
-mvn clean verify
-   │
-   ▼
-Construir JAR
-   │
-   ▼
-Publicar artifact
-```
-
-El artefacto generado se almacena temporalmente en GitHub Actions.
-
-También existe:
-
-```text
-.github/workflows/deploy.yml
-```
-
-que prepara un paquete de deployment cuando se realizan cambios en `main`.
-
-Actualmente el paso de despliegue al servidor se encuentra preparado como **placeholder**, por lo que todavía debe configurarse el proveedor o servidor de producción definitivo.
-
----
-
-# 📂 Estructura del proyecto
-
-```text
-src/
-├── main/
-│   ├── java/org/example/urbanfixbackend/
-│   │   ├── config/
-│   │   ├── controller/
-│   │   ├── dto/
-│   │   │   ├── request/
-│   │   │   └── response/
-│   │   ├── entity/
-│   │   │   └── enums/
-│   │   ├── event/
-│   │   │   └── listener/
-│   │   ├── exception/
-│   │   │   └── handler/
-│   │   ├── mapper/
-│   │   ├── repository/
-│   │   ├── security/
-│   │   │   └── jwt/
-│   │   ├── service/
-│   │   │   └── impl/
-│   │   ├── validation/
-│   │   └── UrbanfixBackendApplication.java
-│   │
-│   └── resources/
-│       ├── application.properties
-│       └── templates/
-│           └── email/
-│
-└── test/
-    └── java/org/example/urbanfixbackend/
-        ├── controller/
-        ├── service/
-        └── support/
-```
-
-Cada capa tiene una responsabilidad específica:
-
-- **controller:** recepción de solicitudes HTTP.
-- **service:** lógica de negocio.
-- **repository:** acceso a PostgreSQL.
-- **entity:** modelo persistente.
-- **dto:** objetos de entrada y salida de la API.
-- **mapper:** conversión entre entidades y DTOs.
-- **security:** autenticación y autorización.
-- **event:** eventos del dominio.
-- **exception:** manejo de errores.
-- **validation:** validaciones personalizadas.
-
----
-
-# 🌿 Flujo de trabajo con Git
-
-El repositorio utiliza principalmente:
+La estrategia de ramas utilizada sigue una estructura similar a:
 
 ```text
 main
@@ -846,66 +851,220 @@ develop
 feature/*
 ```
 
-La rama `develop` funciona como rama principal de integración durante el desarrollo.
+`develop` se utiliza como rama de integración de las funcionalidades desarrolladas.
 
-Para crear una nueva funcionalidad:
+Cada integrante trabaja en ramas específicas antes de integrar sus cambios.
+
+Un flujo típico es:
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout -b feature/nombre-funcionalidad
+git checkout -b feature/nueva-funcionalidad
 ```
 
-Después de realizar los cambios:
+Después de implementar:
 
 ```bash
 git add .
-git commit -m "feat: descripción del cambio"
-git push origin feature/nombre-funcionalidad
+git commit -m "feat: descripcion de la funcionalidad"
+git push origin feature/nueva-funcionalidad
 ```
 
-Posteriormente se crea un **Pull Request hacia `develop`**.
+Posteriormente, los cambios pueden integrarse a `develop` mediante Pull Requests.
 
-Cuando una versión se encuentra lista para producción, `develop` puede integrarse hacia `main`.
+### Gestión de tareas
 
----
+**Completar esta parte según lo realizado realmente por el equipo:**
 
-# 🚀 Estado actual
+> El equipo utilizó [GitHub Projects / Issues / otra herramienta] para distribuir las tareas del proyecto. Las funcionalidades fueron asignadas entre los integrantes y se realizaron seguimientos de las tareas pendientes y completadas.
 
-El backend de UrbanFix cuenta actualmente con una base funcional que incluye:
-
-- ✅ API REST versionada.
-- ✅ PostgreSQL.
-- ✅ Docker Compose.
-- ✅ Arquitectura por capas.
-- ✅ DTOs y mappers.
-- ✅ JWT.
-- ✅ BCrypt.
-- ✅ Roles y autorización.
-- ✅ CRUD de reportes.
-- ✅ Categorías.
-- ✅ Zonas.
-- ✅ Comentarios.
-- ✅ Confirmaciones.
-- ✅ Historial de estados.
-- ✅ Recuperación de contraseña.
-- ✅ Eventos asíncronos.
-- ✅ Templates de correo.
-- ✅ Pruebas unitarias.
-- ✅ Pruebas de integración.
-- ✅ JaCoCo.
-- ✅ Colección de Postman.
-- ✅ GitHub Actions para integración continua.
-- 🟡 Deployment de producción pendiente de configurar.
+> Si no utilizaron GitHub Projects, reemplazar este párrafo indicando la herramienta real utilizada para organizar el trabajo.
 
 ---
 
-# 👨‍💻 UrbanFix
+# 15. CI/CD y Deployment
 
-UrbanFix busca proporcionar una base tecnológica para mejorar la comunicación entre ciudadanos y entidades responsables de la infraestructura urbana, ofreciendo seguimiento, transparencia y participación comunitaria en la resolución de incidencias.
+El proyecto utiliza GitHub Actions para automatizar el proceso de integración continua.
 
-Backend:
+El workflow:
 
 ```text
-https://github.com/Urban-fix/Urbanfix-backend
+.github/workflows/ci.yml
 ```
+
+se ejecuta ante cambios en:
+
+```text
+develop
+main
+```
+
+El flujo incluye:
+
+```text
+Checkout
+   ↓
+JDK 21
+   ↓
+PostgreSQL 16
+   ↓
+mvn clean verify
+   ↓
+Build JAR
+   ↓
+Artifact
+```
+
+También existe:
+
+```text
+.github/workflows/deploy.yml
+```
+
+que genera un paquete preparado para deployment.
+
+Actualmente, la configuración definitiva del servidor de producción todavía se encuentra pendiente.
+
+### URL de producción
+
+```text
+Pendiente de deployment.
+```
+
+Cuando el sistema sea desplegado, reemplazar por:
+
+```text
+https://URL-DEL-BACKEND
+```
+
+---
+
+# 16. Conclusiones
+
+## Logros del proyecto
+
+UrbanFix permitió implementar un backend completo para gestionar incidencias urbanas mediante una arquitectura organizada y una API REST.
+
+Entre los principales logros se encuentran:
+
+- autenticación mediante JWT;
+- autorización basada en roles;
+- persistencia con PostgreSQL;
+- CRUD de reportes;
+- filtros y búsquedas;
+- comentarios y confirmaciones;
+- historial de estados;
+- eventos;
+- procesamiento asíncrono;
+- servicio de correo;
+- manejo global de errores;
+- testing automatizado;
+- integración continua.
+
+## Aprendizajes clave
+
+El desarrollo del proyecto permitió aplicar conceptos fundamentales del desarrollo backend como:
+
+- diseño de APIs REST;
+- separación por capas;
+- persistencia mediante ORM;
+- DTOs y mappers;
+- inyección de dependencias;
+- autenticación y autorización;
+- programación basada en eventos;
+- asincronía;
+- testing;
+- Docker;
+- trabajo colaborativo mediante Git.
+
+También permitió comprender la importancia de separar las responsabilidades y proteger correctamente las operaciones sensibles de una aplicación.
+
+## Trabajo futuro
+
+Como posibles mejoras futuras se consideran:
+
+- completar el deployment del backend;
+- desplegar PostgreSQL en una infraestructura cloud;
+- restringir CORS al dominio del frontend;
+- incorporar Swagger/OpenAPI;
+- agregar paginación;
+- mejorar filtros geográficos;
+- permitir subida real de fotografías;
+- almacenamiento de archivos mediante servicios cloud;
+- mejorar el sistema de notificaciones;
+- aumentar la cobertura de pruebas;
+- incorporar métricas y monitoreo.
+
+---
+
+# 17. Apéndices
+
+## Licencia
+
+**Pendiente de definir por el equipo.**
+
+Si el proyecto utiliza una licencia específica, indicar por ejemplo:
+
+```text
+MIT License
+```
+
+y agregar el archivo `LICENSE` correspondiente al repositorio.
+
+## Referencias
+
+Para el desarrollo se utilizaron principalmente las siguientes tecnologías y su documentación oficial:
+
+- Spring Boot Documentation.
+- Spring Security Documentation.
+- Spring Data JPA Documentation.
+- PostgreSQL Documentation.
+- Docker Documentation.
+- JJWT Documentation.
+- JUnit Documentation.
+- Mockito Documentation.
+- Testcontainers Documentation.
+- Postman Learning Center.
+- GitHub Actions Documentation.
+
+---
+
+## Estado actual del proyecto
+
+```text
+✅ API REST
+✅ PostgreSQL
+✅ Docker Compose
+✅ Arquitectura Controller → Service → Repository
+✅ DTOs
+✅ Mappers
+✅ JWT
+✅ Refresh Token
+✅ BCrypt
+✅ Roles
+✅ CRUD de reportes
+✅ Categorías
+✅ Zonas
+✅ Comentarios
+✅ Confirmaciones
+✅ Historial de estados
+✅ Recuperación de contraseña
+✅ Eventos personalizados
+✅ Procesamiento asíncrono
+✅ Email y plantillas HTML
+✅ Excepciones personalizadas
+✅ Global Exception Handler
+✅ Tests unitarios
+✅ Tests de integración
+✅ JaCoCo
+✅ Postman Collection
+✅ GitHub Actions
+🟡 Deployment de producción pendiente
+```
+
+---
+
+# UrbanFix 🏙️
+
+**Plataforma colaborativa para el reporte y seguimiento de incidencias urbanas.**
