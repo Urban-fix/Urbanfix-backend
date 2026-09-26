@@ -1,0 +1,1430 @@
+{
+  "info": {
+    "name": "UrbanFix API — Complete Collection",
+    "_postman_id": "urbanfix-0001",
+    "description": "Colección completa de pruebas para UrbanFix API - Sistema de reportes urbanos. Verifica autenticación, autorización por roles, validaciones y todos los endpoints.\n\nCómo usarla:\n1. Levanta tu API (por defecto http://localhost:8080) - DataInitializer creará categorías y zonas automáticamente\n2. Importa esta colección y el environment UrbanFix.postman_environment.json\n3. Corre la colección completa con Collection Runner en orden\n4. Revisa los test results para ver qué se está validando\n\nRoles soportados: CIUDADANO, ADMIN_MUNICIPAL, TECNICO, SUPERVISOR, OPERADOR, AUDITOR\n\nNOTA: Las categorías y zonas se crean automáticamente al iniciar la aplicación (DataInitializer).\n\nLos correos electrónicos (bienvenida, cambio de estado, recuperación de contraseña) se guardan en archivos txt en el directorio 'email-output' para facilitar su revisión durante las pruebas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "ciudadanoToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "tecnicoToken", "value": "" },
+    { "key": "supervisorToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "ciudadanoEmail", "value": "" },
+    { "key": "ciudadanoPassword", "value": "" },
+    { "key": "adminEmail", "value": "" },
+    { "key": "adminPassword", "value": "" },
+    { "key": "tecnicoEmail", "value": "" },
+    { "key": "tecnicoPassword", "value": "" },
+    { "key": "supervisorEmail", "value": "" },
+    { "key": "supervisorPassword", "value": "" },
+    { "key": "categoriaId", "value": "" },
+    { "key": "zonaId", "value": "" },
+    { "key": "reporteId", "value": "" },
+    { "key": "comentarioId", "value": "" },
+    { "key": "uniqueSuffix", "value": "" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Inicializar uniqueSuffix si no existe",
+          "if (!pm.environment.get('uniqueSuffix') || pm.environment.get('uniqueSuffix') === '') {",
+          "    pm.environment.set('uniqueSuffix', Date.now().toString());",
+          "}",
+          "console.log('uniqueSuffix:', pm.environment.get('uniqueSuffix'));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup - Crear Usuarios por Rol",
+      "item": [
+        {
+          "name": "0.1 Registrar CIUDADANO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.environment.get('uniqueSuffix');",
+                  "pm.environment.set('ciudadanoEmail', `ciudadano.${suffix}@urbanfix.com`);",
+                  "pm.environment.set('ciudadanoPassword', 'Ciudadano123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.1] Registro CIUDADANO responde 200/201', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Ciudadano\",\n  \"email\": \"{{ciudadanoEmail}}\",\n  \"password\": \"{{ciudadanoPassword}}\",\n  \"rol\": \"CIUDADANO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.2 Registrar ADMIN_MUNICIPAL",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.environment.get('uniqueSuffix');",
+                  "pm.environment.set('adminEmail', `admin.${suffix}@urbanfix.com`);",
+                  "pm.environment.set('adminPassword', 'Admin123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.2] Registro ADMIN_MUNICIPAL responde 200/201', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria\",\n  \"apellido\": \"Admin\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rol\": \"ADMIN_MUNICIPAL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.3 Registrar TECNICO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.environment.get('uniqueSuffix');",
+                  "pm.environment.set('tecnicoEmail', `tecnico.${suffix}@urbanfix.com`);",
+                  "pm.environment.set('tecnicoPassword', 'Tecnico123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.3] Registro TECNICO responde 200/201', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellido\": \"Tecnico\",\n  \"email\": \"{{tecnicoEmail}}\",\n  \"password\": \"{{tecnicoPassword}}\",\n  \"rol\": \"TECNICO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.4 Registrar SUPERVISOR",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.environment.get('uniqueSuffix');",
+                  "pm.environment.set('supervisorEmail', `supervisor.${suffix}@urbanfix.com`);",
+                  "pm.environment.set('supervisorPassword', 'Supervisor123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.4] Registro SUPERVISOR responde 200/201', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana\",\n  \"apellido\": \"Supervisor\",\n  \"email\": \"{{supervisorEmail}}\",\n  \"password\": \"{{supervisorPassword}}\",\n  \"rol\": \"SUPERVISOR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.5 Login CIUDADANO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = pm.environment.get('ciudadanoEmail');",
+                  "const password = pm.environment.get('ciudadanoPassword');",
+                  "console.log('Login CIUDADANO - email:', email, 'password:', password);",
+                  "if (!email || !password) {",
+                  "    throw new Error('ciudadanoEmail o ciudadanoPassword no están definidos');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.5] Login CIUDADANO responde 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('[0.5] Guardamos token de CIUDADANO', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken');",
+                  "    pm.environment.set('ciudadanoToken', body.accessToken);",
+                  "    pm.environment.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ciudadanoEmail}}\",\n  \"password\": \"{{ciudadanoPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.6 Login ADMIN_MUNICIPAL",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = pm.environment.get('adminEmail');",
+                  "const password = pm.environment.get('adminPassword');",
+                  "console.log('Login ADMIN - email:', email, 'password:', password);",
+                  "if (!email || !password) {",
+                  "    throw new Error('adminEmail o adminPassword no están definidos');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.6] Login ADMIN_MUNICIPAL responde 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('[0.6] Guardamos token de ADMIN_MUNICIPAL', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken');",
+                  "    pm.environment.set('adminToken', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.7 Login TECNICO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = pm.environment.get('tecnicoEmail');",
+                  "const password = pm.environment.get('tecnicoPassword');",
+                  "console.log('Login TECNICO - email:', email, 'password:', password);",
+                  "if (!email || !password) {",
+                  "    throw new Error('tecnicoEmail o tecnicoPassword no están definidos');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.7] Login TECNICO responde 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('[0.7] Guardamos token de TECNICO', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken');",
+                  "    pm.environment.set('tecnicoToken', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{tecnicoEmail}}\",\n  \"password\": \"{{tecnicoPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.8 Login SUPERVISOR",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = pm.environment.get('supervisorEmail');",
+                  "const password = pm.environment.get('supervisorPassword');",
+                  "console.log('Login SUPERVISOR - email:', email, 'password:', password);",
+                  "if (!email || !password) {",
+                  "    throw new Error('supervisorEmail o supervisorPassword no están definidos');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[0.8] Login SUPERVISOR responde 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('[0.8] Guardamos token de SUPERVISOR', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken');",
+                  "    pm.environment.set('supervisorToken', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{supervisorEmail}}\",\n  \"password\": \"{{supervisorPassword}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "1.1 Login correcto retorna tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.1] Login responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('[1.1] Respuesta tiene accessToken y refreshToken', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken');",
+                  "    pm.expect(body).to.have.property('refreshToken');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ciudadanoEmail}}\",\n  \"password\": \"{{ciudadanoPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.2 Rechaza email inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.2] Email inválido responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"apellido\": \"User\",\n  \"email\": \"email-invalido\",\n  \"password\": \"Password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.3 Rechaza password corto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.3] Password < 8 chars responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"apellido\": \"User\",\n  \"email\": \"test.{{uniqueSuffix}}@urbanfix.com\",\n  \"password\": \"short\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.4 Rechaza campos faltantes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.4] Campos faltantes responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.5 Refresh token funciona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.5] Refresh token responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('[1.5] Retorna nuevo accessToken', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken');",
+                  "    pm.environment.set('ciudadanoToken', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{refreshToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "refresh"] }
+          }
+        },
+        {
+          "name": "1.6 Solicitar recuperación de contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.6] Solicitud de reset responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('[1.6] Guardamos resetToken', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('token');",
+                  "    pm.environment.set('resetToken', body.token);",
+                  "    console.log('resetToken:', body.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/password-reset/request", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "password-reset", "request"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ciudadanoEmail}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.7 Confirmar recuperación de contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[1.7] Confirmación de reset responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/password-reset/confirm", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "password-reset", "confirm"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"NuevaPassword123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Categorías (Roles: ADMIN_MUNICIPAL, SUPERVISOR)",
+      "item": [
+        {
+          "name": "2.1 Obtener primera categoría existente (DataInitializer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[2.1] GET categorías responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('[2.1] Guardamos primera categoriaId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.length).to.be.greaterThan(0);",
+                  "    pm.environment.set('categoriaId', body[0].id);",
+                  "    console.log('categoriaId:', body[0].id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/categorias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias"] }
+          }
+        },
+        {
+          "name": "2.2 Rechaza crear categoría sin autenticación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[2.2] Sin token responde 401/403', function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/categorias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"descripcion\": \"Test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.3 Rechaza crear categoría como CIUDADANO (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[2.3] CIUDADANO sin permiso responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/categorias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"descripcion\": \"Test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.4 Obtener todas las categorías (público)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[2.4] GET público responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/categorias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias"] }
+          }
+        },
+        {
+          "name": "2.5 Actualizar categoría como SUPERVISOR",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar categoriaId por defecto si no está definido",
+                  "if (!pm.environment.get('categoriaId') || pm.environment.get('categoriaId') === '') {",
+                  "    pm.environment.set('categoriaId', 1);",
+                  "    console.log('Usando categoriaId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[2.5] SUPERVISOR puede actualizar (200)', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{supervisorToken}}" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/categorias/{{categoriaId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias", "{{categoriaId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Alumbrado Público\",\n  \"descripcion\": \"Descripción actualizada\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.6 Eliminar categoría como ADMIN_MUNICIPAL",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar categoriaId por defecto si no está definido",
+                  "if (!pm.environment.get('categoriaId') || pm.environment.get('categoriaId') === '') {",
+                  "    pm.environment.set('categoriaId', 1);",
+                  "    console.log('Usando categoriaId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[2.6] ADMIN puede eliminar (204)', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}" }] },
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/categorias/{{categoriaId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias", "{{categoriaId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Zonas (Roles: ADMIN_MUNICIPAL, SUPERVISOR)",
+      "item": [
+        {
+          "name": "3.1 Obtener primera zona existente (DataInitializer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[3.1] GET zonas responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('[3.1] Guardamos primera zonaId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.length).to.be.greaterThan(0);",
+                  "    pm.environment.set('zonaId', body[0].id);",
+                  "    console.log('zonaId:', body[0].id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/zonas", "host": ["{{baseUrl}}"], "path": ["api", "v1", "zonas"] }
+          }
+        },
+        {
+          "name": "3.2 Rechaza crear zona como CIUDADANO (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[3.2] CIUDADANO sin permiso responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/zonas", "host": ["{{baseUrl}}"], "path": ["api", "v1", "zonas"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"coordenadasReferencia\": \"0,0\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.3 Obtener todas las zonas (público)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[3.3] GET público responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/zonas", "host": ["{{baseUrl}}"], "path": ["api", "v1", "zonas"] }
+          }
+        },
+        {
+          "name": "3.4 Rechaza como TECNICO (403)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar zonaId por defecto si no está definido",
+                  "if (!pm.environment.get('zonaId') || pm.environment.get('zonaId') === '') {",
+                  "    pm.environment.set('zonaId', 1);",
+                  "    console.log('Usando zonaId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[3.4] TECNICO sin permiso responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tecnicoToken}}" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/zonas/{{zonaId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "zonas", "{{zonaId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"coordenadasReferencia\": \"0,0\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reportes",
+      "item": [
+        {
+          "name": "4.1 Crear reporte como CIUDADANO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar IDs por defecto si no están definidos (DataInitializer crea IDs secuenciales desde 1)",
+                  "if (!pm.environment.get('categoriaId') || pm.environment.get('categoriaId') === '') {",
+                  "    pm.environment.set('categoriaId', 1);",
+                  "    console.log('Usando categoriaId por defecto: 1');",
+                  "}",
+                  "if (!pm.environment.get('zonaId') || pm.environment.get('zonaId') === '') {",
+                  "    pm.environment.set('zonaId', 1);",
+                  "    console.log('Usando zonaId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.1] Crear reporte autenticado responde 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('[4.1] Guardamos reporteId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('reporteId', body.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Lámpara rota en calle principal\",\n  \"descripcion\": \"La lámpara está rota y no funciona\",\n  \"categoriaId\": {{categoriaId}},\n  \"zonaId\": {{zonaId}},\n  \"latitud\": -34.6037,\n  \"longitud\": -58.3816,\n  \"fotoUrl\": \"https://example.com/imagen.jpg\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.2 Rechaza crear reporte sin autenticación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.2] Sin token responde 401/403', function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Test\",\n  \"descripcion\": \"Test\",\n  \"categoriaId\": 1,\n  \"zonaId\": 1,\n  \"latitud\": 0,\n  \"longitud\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "4.3 Obtener todos los reportes (público)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.3] GET público responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes"] }
+          }
+        },
+        {
+          "name": "4.4 Filtrar por estado REPORTADO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.4] Filtro por estado responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes?estado=REPORTADO",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reportes"],
+              "query": [{ "key": "estado", "value": "REPORTADO" }]
+            }
+          }
+        },
+        {
+          "name": "4.5 Filtrar por estado RECHAZADO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.5] Filtro por RECHAZADO responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reportes?estado=RECHAZADO",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reportes"],
+              "query": [{ "key": "estado", "value": "RECHAZADO" }]
+            }
+          }
+        },
+        {
+          "name": "4.6 Cambiar estado como ADMIN_MUNICIPAL",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Obtener reporteId si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.sendRequest({",
+                  "        url: pm.environment.get('baseUrl') + '/api/v1/reportes',",
+                  "        method: 'GET'",
+                  "    }, function (err, res) {",
+                  "        if (!err && res.code === 200) {",
+                  "            const reportes = res.json();",
+                  "            if (reportes.length > 0) {",
+                  "                pm.environment.set('reporteId', reportes[0].id);",
+                  "                console.log('reporteId obtenido:', reportes[0].id);",
+                  "            }",
+                  "        }",
+                  "    });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.6] ADMIN puede cambiar estado (200)', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "estado"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevoEstado\": \"EN_PROCESO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.7 Rechaza cambiar estado como CIUDADANO (403)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Obtener reporteId si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.sendRequest({",
+                  "        url: pm.environment.get('baseUrl') + '/api/v1/reportes',",
+                  "        method: 'GET'",
+                  "    }, function (err, res) {",
+                  "        if (!err && res.code === 200) {",
+                  "            const reportes = res.json();",
+                  "            if (reportes.length > 0) {",
+                  "                pm.environment.set('reporteId', reportes[0].id);",
+                  "                console.log('reporteId obtenido:', reportes[0].id);",
+                  "            }",
+                  "        }",
+                  "    });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.7] CIUDADANO sin permiso responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "estado"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevoEstado\": \"RESUELTO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.8 Cambiar estado a RECHAZADO como TECNICO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Obtener reporteId si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.sendRequest({",
+                  "        url: pm.environment.get('baseUrl') + '/api/v1/reportes',",
+                  "        method: 'GET'",
+                  "    }, function (err, res) {",
+                  "        if (!err && res.code === 200) {",
+                  "            const reportes = res.json();",
+                  "            if (reportes.length > 0) {",
+                  "                pm.environment.set('reporteId', reportes[0].id);",
+                  "                console.log('reporteId obtenido:', reportes[0].id);",
+                  "            }",
+                  "        }",
+                  "    });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.8] TECNICO puede cambiar estado (200)', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tecnicoToken}}" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "estado"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevoEstado\": \"RECHAZADO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.9 Obtener mis reportes (autenticado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[4.9] Mis reportes responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/mis-reportes", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "mis-reportes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Comentarios",
+      "item": [
+        {
+          "name": "5.1 Crear comentario como CIUDADANO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[5.1] Crear comentario autenticado responde 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('[5.1] Guardamos comentarioId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('comentarioId', body.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/comentarios", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "comentarios"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Yo también vi este problema\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5.2 Rechaza crear comentario sin autenticación",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[5.2] Sin token responde 401/403', function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/comentarios", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "comentarios"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5.3 Obtener comentarios (público)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[5.3] GET público responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/comentarios", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "comentarios"] }
+          }
+        },
+        {
+          "name": "5.4 Eliminar comentario como autor",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar IDs por defecto si no están definidos",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}",
+                  "if (!pm.environment.get('comentarioId') || pm.environment.get('comentarioId') === '') {",
+                  "    pm.environment.set('comentarioId', 1);",
+                  "    console.log('Usando comentarioId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[5.4] Autor puede eliminar (204)', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/comentarios/{{comentarioId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "comentarios", "{{comentarioId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Confirmaciones",
+      "item": [
+        {
+          "name": "6.1 Confirmar reporte como CIUDADANO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[6.1] Confirmar autenticado responde 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/confirmaciones", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "confirmaciones"] }
+          }
+        },
+        {
+          "name": "6.2 Rechaza confirmar sin autenticación",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[6.2] Sin token responde 401/403', function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/confirmaciones", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "confirmaciones"] }
+          }
+        },
+        {
+          "name": "6.3 Obtener conteo de confirmaciones (público)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[6.3] GET público responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/confirmaciones/conteo", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "confirmaciones", "conteo"] }
+          }
+        },
+        {
+          "name": "6.4 Verificar si usuario confirmó (autenticado)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[6.4] Verificar autenticado responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/confirmaciones/verificar", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "confirmaciones", "verificar"] }
+          }
+        },
+        {
+          "name": "6.5 Eliminar confirmación",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Usar reporteId por defecto si no está definido",
+                  "if (!pm.environment.get('reporteId') || pm.environment.get('reporteId') === '') {",
+                  "    pm.environment.set('reporteId', 1);",
+                  "    console.log('Usando reporteId por defecto: 1');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[6.5] Eliminar confirmación responde 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{ciudadanoToken}}" }] },
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/reportes/{{reporteId}}/confirmaciones", "host": ["{{baseUrl}}"], "path": ["api", "v1", "reportes", "{{reporteId}}", "confirmaciones"] }
+          }
+        }
+      ]
+    }
+  ]
+}

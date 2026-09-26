@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests with coverage check
+        run: mvn clean verify
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: testdb
+          DB_USER: testuser
+          DB_PASSWORD: testpass
+          JWT_SECRET: IOGdWVWhaoLM7JcCI5qTxFjoH1BZ8w1vYpYdBus4tdI=
+          JWT_EXPIRATION_ACCESS: 3600000
+          JWT_EXPIRATION_REFRESH: 604800000
+          PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES: 30
+          MAIL_HOST: smtp.gmail.com
+          MAIL_PORT: 587
+          MAIL_USERNAME: test@example.com
+          MAIL_PASSWORD: testpass
+
+      - name: Build JAR
+        run: mvn package -DskipTests
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: urbanfix-backend-jar
+          path: target/*.jar
+          retention-days: 7

@@ -1,0 +1,91 @@
+TO: ciudadano.1790308154916@urbanfix.com
+SUBJECT: Bienvenido a UrbanFix 🏙️
+TIMESTAMP: 2026-09-25T15:07:27.609685466
+========================================
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido a UrbanFix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+            margin: -30px -30px 30px -30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🏙️</div>
+            <h1>¡Bienvenido a UrbanFix!</h1>
+        </div>
+        <div class="content">
+            <p>Hola <strong>Juan</strong>,</p>
+            <p>Gracias por registrarte en <strong>UrbanFix</strong>. Ahora eres parte de la comunidad que trabaja para mejorar nuestra ciudad.</p>
+            <p>Con UrbanFix puedes:</p>
+            <ul>
+                <li>📝 Reportar problemas urbanos (baches, iluminación, basura, etc.)</li>
+                <li>📍 Geolocalizar incidentes en tu zona</li>
+                <li>👍 Confirmar reportes de otros ciudadanos</li>
+                <li>💬 Comentar y dar seguimiento a los reportes</li>
+                <li>📊 Ver el estado de los reportes en tiempo real</li>
+            </ul>
+            <p>¡Juntos podemos hacer de nuestra ciudad un mejor lugar para vivir!</p>
+            <a href="https://urbanfix.com" class="button">Comenzar a Reportar</a>
+        </div>
+        <div class="footer">
+            <p>Este es un correo automático, por favor no respondas.</p>
+            <p>&copy; 2024 UrbanFix. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>
