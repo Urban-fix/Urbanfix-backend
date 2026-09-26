@@ -463,7 +463,6 @@ Aunque el MVP está completo y funcional, existen áreas identificadas para mejo
 - Implementar rate limiting para prevenir abuso de la API
 - Agregar caching con Redis para endpoints de lectura frecuente (listado de reportes, categorías)
 - Implementar paginación en todos los endpoints que retornan listas
-- Agregar búsqueda full-text con Elasticsearch para reportes
 - Implementar WebSockets para notificaciones en tiempo real a clientes conectados
 
 **Funcionalidades Adicionales**
@@ -476,15 +475,12 @@ Aunque el MVP está completo y funcional, existen áreas identificadas para mejo
 
 **Mejoras de Seguridad**
 - Implementar OAuth2 para autenticación con proveedores externos (Google, Facebook)
-- Agregar 2FA (Two-Factor Authentication) opcional
+- Agregar 2FA (Two-Factor Authentication)
 - Implementar auditoría completa de todas las acciones sensibles
 - Agregar encriptación de campos sensibles en la base de datos
 
 **Infraestructura y DevOps**
-- Completar el workflow de deployment con integración a Railway/Render
-- Implementar monitoreo con Prometheus y Grafana
-- Agregar logging centralizado con ELK Stack
-- Implementar blue-green deployment para zero-downtime deployments
+- Completar el workflow de deployment con integración a AWS
 - Agregar tests de carga y estrés con JMeter o Gatling
 
 ---
@@ -508,7 +504,8 @@ Este proyecto se distribuye bajo la licencia MIT.
 ### Instalación y Ejecución
 
 **Requisitos Previos**
-- Java 21 o superior
+- Java 21
+- JDK(Se uso en el proyecto): Temurin 21 
 - Maven 3.6+
 - Docker y Docker Compose
 - Git
@@ -524,7 +521,6 @@ cd Urbanfix-backend
 2. Configurar variables de entorno:
 ```bash
 cp .env.example .env
-# Editar .env con valores reales
 ```
 
 3. Iniciar base de datos con Docker Compose:
