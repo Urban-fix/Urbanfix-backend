@@ -4,6 +4,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.service.EmailService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,6 +14,7 @@ import org.thymeleaf.context.Context;
 
 @Service
 @Primary
+@ConditionalOnProperty(name = "spring.mail.host", havingValue = "disabled", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
