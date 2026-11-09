@@ -12,6 +12,7 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 1001 -g root spring
+RUN mkdir -p /app/logs /app/uploads && chown -R 1001:root /app/logs /app/uploads
 USER 1001
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
