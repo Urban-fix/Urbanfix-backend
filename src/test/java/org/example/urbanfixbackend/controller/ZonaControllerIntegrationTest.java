@@ -68,6 +68,9 @@ class ZonaControllerIntegrationTest {
     @Autowired
     private ZonaRepository zonaRepository;
 
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     private String adminAccessToken;
 
     @BeforeEach
@@ -78,17 +81,15 @@ class ZonaControllerIntegrationTest {
         zonaRepository.deleteAll();
         usuarioRepository.deleteAll();
 
-        // Registrar usuario admin
-        RegisterRequestDTO adminDTO = new RegisterRequestDTO(
-                "Admin",
-                "User",
-                "admin@example.com",
-                "Password123"
-        );
-        mockMvc.perform(post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(adminDTO)))
-                .andExpect(status().isCreated());
+        // Crear usuario admin directamente en la base de datos con rol ADMIN_MUNICIPAL
+        org.example.urbanfixbackend.entity.Usuario admin = new org.example.urbanfixbackend.entity.Usuario();
+        admin.setNombre("Admin");
+        admin.setApellido("User");
+        admin.setEmail("admin@example.com");
+        admin.setPassword(passwordEncoder.encode("Password123"));
+        admin.setRol(org.example.urbanfixbackend.entity.enums.Rol.ADMIN_MUNICIPAL);
+        admin.setFechaRegistro(java.time.LocalDateTime.now());
+        usuarioRepository.save(admin);
 
         // Login como admin
         LoginRequestDTO loginDTO = new LoginRequestDTO("admin@example.com", "Password123");
