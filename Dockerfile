@@ -9,7 +9,9 @@ RUN mvn -B -q -DskipTests package
 # === Stage 2: runtime ===
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-RUN useradd -r -u 1001 -g root spring
+# Crear directorio de logs y asignar permisos
+RUN mkdir -p /app/logs \
+    && chown -R 1001:0 /app/logs
 USER 1001
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
