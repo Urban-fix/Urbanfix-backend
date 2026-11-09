@@ -28,6 +28,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -107,11 +108,10 @@ class ReporteControllerIntegrationTest {
                 "Test",
                 "User",
                 "test@example.com",
-                "Password123",
-                Rol.CIUDADANO
+                "Password123"
         );
 
-        String registerResponse = mockMvc.perform(post("/api/v1/auth/register")
+        String registerResponse = mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDTO)))
                 .andExpect(status().isCreated())
@@ -131,7 +131,7 @@ class ReporteControllerIntegrationTest {
         usuarioRepository.save(admin);
 
         LoginRequestDTO adminLogin = new LoginRequestDTO("admin@example.com", "Admin1234");
-        String adminLoginResponse = mockMvc.perform(post("/api/v1/auth/login")
+        String adminLoginResponse = mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(adminLogin)))
                 .andExpect(status().isOk())
@@ -229,7 +229,7 @@ class ReporteControllerIntegrationTest {
     void loginAndCreateReporte_Flow() throws Exception {
         // Login con el usuario registrado
         LoginRequestDTO loginDTO = new LoginRequestDTO("test@example.com", "Password123");
-        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+        String loginResponse = mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())
@@ -322,5 +322,42 @@ class ReporteControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(EstadoReporte.EN_PROCESO)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createReporteWithFile_Success() throws Exception {
+        MockMultipartFile foto = new MockMultipartFile(
+                "foto",
+                "test-photo.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "test image content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/v1/reportes")
+                .file(foto)
+                .param("titulo", "Bache en la calle")
+                .param("descripcion", "Hay un bache grande")
+                .param("latitud", "-12.119")
+                .param("longitud", "-77.03")
+                .param("categoriaId", categoriaId.toString())
+                .param("zonaId", zonaId.toString())
+                .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.titulo").value("Bache en la calle"))
+                .andExpect(jsonPath("$.fotoUrl").exists());
+    }
+
+    @Test
+    void createReporteWithoutFile_Success() throws Exception {
+        mockMvc.perform(multipart("/api/v1/reportes")
+                .param("titulo", "Bache en la calle")
+                .param("descripcion", "Hay un bache grande")
+                .param("latitud", "-12.119")
+                .param("longitud", "-77.03")
+                .param("categoriaId", categoriaId.toString())
+                .param("zonaId", zonaId.toString())
+                .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.titulo").value("Bache en la calle"));
     }
 }

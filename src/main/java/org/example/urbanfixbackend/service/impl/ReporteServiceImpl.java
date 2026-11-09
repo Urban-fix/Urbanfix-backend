@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.urbanfixbackend.dto.request.ReporteCreateDTO;
 import org.example.urbanfixbackend.dto.request.ReporteUpdateDTO;
 import org.example.urbanfixbackend.dto.response.ReporteDetailDTO;
+import org.example.urbanfixbackend.dto.response.ReportePublicDTO;
 import org.example.urbanfixbackend.dto.response.ReporteResponseDTO;
 import org.example.urbanfixbackend.entity.Categoria;
 import org.example.urbanfixbackend.entity.Reporte;
@@ -22,10 +23,12 @@ import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.repository.ZonaRepository;
 import org.example.urbanfixbackend.event.ReporteCreadoEvent;
 import org.example.urbanfixbackend.service.EstadoHistorialService;
+import org.example.urbanfixbackend.service.FileStorageService;
 import org.example.urbanfixbackend.service.ReporteService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +45,7 @@ public class ReporteServiceImpl implements ReporteService {
     private final ConfirmacionRepository confirmacionRepository;
     private final EstadoHistorialService estadoHistorialService;
     private final ApplicationEventPublisher eventPublisher;
+    private final FileStorageService fileStorageService;
 
     @Override
     public ReporteResponseDTO createReporte(ReporteCreateDTO dto, Long usuarioId) {
@@ -66,12 +70,57 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     @Override
+    public ReporteResponseDTO createReporteWithFile(String titulo, String descripcion, Double latitud, Double longitud,
+                                                     MultipartFile foto, Long categoriaId, Long zonaId, Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ReporteNotFoundException("Usuario no encontrado"));
+
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new CategoriaNotFoundException(categoriaId));
+
+        Zona zona = zonaRepository.findById(zonaId)
+                .orElseThrow(() -> new ZonaNotFoundException(zonaId));
+
+        String fotoUrl = null;
+        if (foto != null && !foto.isEmpty()) {
+            fotoUrl = fileStorageService.storeFile(foto);
+        }
+
+        Reporte reporte = new Reporte();
+        reporte.setTitulo(titulo);
+        reporte.setDescripcion(descripcion);
+        reporte.setLatitud(latitud);
+        reporte.setLongitud(longitud);
+        reporte.setFotoUrl(fotoUrl);
+        reporte.setUsuario(usuario);
+        reporte.setCategoria(categoria);
+        reporte.setZona(zona);
+
+        Reporte savedReporte = reporteRepository.save(reporte);
+        long confirmacionesCount = confirmacionRepository.countByReporteId(savedReporte.getId());
+
+        return ReporteMapper.toDTO(savedReporte, confirmacionesCount);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public ReporteResponseDTO getReporteById(Long id) {
         Reporte reporte = reporteRepository.findById(id)
                 .orElseThrow(() -> new ReporteNotFoundException(id));
         long confirmacionesCount = confirmacionRepository.countByReporteId(id);
         return ReporteMapper.toDTO(reporte, confirmacionesCount);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReportePublicDTO getPublicReporteById(Long id) {
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new ReporteNotFoundException(id));
+        if (reporte.getEstadoActual() == EstadoReporte.RESUELTO) {
+            throw new ReporteNotFoundException(id);
+        }
+        long confirmacionesCount = confirmacionRepository.countByReporteId(id);
+        return ReporteMapper.toPublicDTO(reporte, confirmacionesCount);
     }
 
     @Override
@@ -88,7 +137,19 @@ public class ReporteServiceImpl implements ReporteService {
     public List<ReporteResponseDTO> getAllReportes() {
         List<Reporte> reportes = reporteRepository.findAll();
         return reportes.stream()
-                .map(reporte -> ReporteMapper.toDTO(reporte, 
+                .map(reporte -> ReporteMapper.toDTO(reporte,
+                        confirmacionRepository.countByReporteId(reporte.getId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReportePublicDTO> getAllPublicReportes() {
+        List<Reporte> reportes = reporteRepository.findAll().stream()
+                .filter(reporte -> reporte.getEstadoActual() != EstadoReporte.RESUELTO)
+                .collect(Collectors.toList());
+        return reportes.stream()
+                .map(reporte -> ReporteMapper.toPublicDTO(reporte,
                         confirmacionRepository.countByReporteId(reporte.getId())))
                 .collect(Collectors.toList());
     }
@@ -98,7 +159,20 @@ public class ReporteServiceImpl implements ReporteService {
     public List<ReporteResponseDTO> getReportesByEstado(org.example.urbanfixbackend.entity.enums.EstadoReporte estado) {
         List<Reporte> reportes = reporteRepository.findByEstadoActual(estado);
         return reportes.stream()
-                .map(reporte -> ReporteMapper.toDTO(reporte, 
+                .map(reporte -> ReporteMapper.toDTO(reporte,
+                        confirmacionRepository.countByReporteId(reporte.getId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReportePublicDTO> getPublicReportesByEstado(org.example.urbanfixbackend.entity.enums.EstadoReporte estado) {
+        if (estado == EstadoReporte.RESUELTO) {
+            return List.of();
+        }
+        List<Reporte> reportes = reporteRepository.findByEstadoActual(estado);
+        return reportes.stream()
+                .map(reporte -> ReporteMapper.toPublicDTO(reporte,
                         confirmacionRepository.countByReporteId(reporte.getId())))
                 .collect(Collectors.toList());
     }
@@ -108,7 +182,19 @@ public class ReporteServiceImpl implements ReporteService {
     public List<ReporteResponseDTO> getReportesByCategoria(Long categoriaId) {
         List<Reporte> reportes = reporteRepository.findByCategoriaId(categoriaId);
         return reportes.stream()
-                .map(reporte -> ReporteMapper.toDTO(reporte, 
+                .map(reporte -> ReporteMapper.toDTO(reporte,
+                        confirmacionRepository.countByReporteId(reporte.getId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReportePublicDTO> getPublicReportesByCategoria(Long categoriaId) {
+        List<Reporte> reportes = reporteRepository.findByCategoriaId(categoriaId).stream()
+                .filter(reporte -> reporte.getEstadoActual() != EstadoReporte.RESUELTO)
+                .collect(Collectors.toList());
+        return reportes.stream()
+                .map(reporte -> ReporteMapper.toPublicDTO(reporte,
                         confirmacionRepository.countByReporteId(reporte.getId())))
                 .collect(Collectors.toList());
     }
@@ -118,7 +204,19 @@ public class ReporteServiceImpl implements ReporteService {
     public List<ReporteResponseDTO> getReportesByZona(Long zonaId) {
         List<Reporte> reportes = reporteRepository.findByZonaId(zonaId);
         return reportes.stream()
-                .map(reporte -> ReporteMapper.toDTO(reporte, 
+                .map(reporte -> ReporteMapper.toDTO(reporte,
+                        confirmacionRepository.countByReporteId(reporte.getId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReportePublicDTO> getPublicReportesByZona(Long zonaId) {
+        List<Reporte> reportes = reporteRepository.findByZonaId(zonaId).stream()
+                .filter(reporte -> reporte.getEstadoActual() != EstadoReporte.RESUELTO)
+                .collect(Collectors.toList());
+        return reportes.stream()
+                .map(reporte -> ReporteMapper.toPublicDTO(reporte,
                         confirmacionRepository.countByReporteId(reporte.getId())))
                 .collect(Collectors.toList());
     }
@@ -138,7 +236,19 @@ public class ReporteServiceImpl implements ReporteService {
     public List<ReporteResponseDTO> searchReportes(String query) {
         List<Reporte> reportes = reporteRepository.searchByTituloOrDescripcion(query, query);
         return reportes.stream()
-                .map(reporte -> ReporteMapper.toDTO(reporte, 
+                .map(reporte -> ReporteMapper.toDTO(reporte,
+                        confirmacionRepository.countByReporteId(reporte.getId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReportePublicDTO> searchPublicReportes(String query) {
+        List<Reporte> reportes = reporteRepository.searchByTituloOrDescripcion(query, query).stream()
+                .filter(reporte -> reporte.getEstadoActual() != EstadoReporte.RESUELTO)
+                .collect(Collectors.toList());
+        return reportes.stream()
+                .map(reporte -> ReporteMapper.toPublicDTO(reporte,
                         confirmacionRepository.countByReporteId(reporte.getId())))
                 .collect(Collectors.toList());
     }

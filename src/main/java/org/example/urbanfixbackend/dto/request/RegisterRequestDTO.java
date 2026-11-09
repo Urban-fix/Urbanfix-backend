@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.example.urbanfixbackend.validation.PasswordConstraints;
-import org.example.urbanfixbackend.entity.enums.Rol;
 
 public record RegisterRequestDTO(
         @NotBlank(message = "El nombre es obligatorio")
@@ -24,7 +23,5 @@ public record RegisterRequestDTO(
         @NotBlank(message = "El password es obligatorio")
         @Size(min = 8, max = 255, message = "El password debe tener entre 8 y 255 caracteres")
         @Pattern(regexp = PasswordConstraints.PATTERN, message = PasswordConstraints.MESSAGE)
-        String password,
-
-        Rol rol
+        String password
 ) {}

@@ -3,10 +3,15 @@ package org.example.urbanfixbackend.config;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.entity.Categoria;
+import org.example.urbanfixbackend.entity.Usuario;
 import org.example.urbanfixbackend.entity.Zona;
+import org.example.urbanfixbackend.entity.enums.Rol;
 import org.example.urbanfixbackend.repository.CategoriaRepository;
+import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.repository.ZonaRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +22,20 @@ public class DataInitializer implements CommandLineRunner {
 
     private final CategoriaRepository categoriaRepository;
     private final ZonaRepository zonaRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${admin.email:admin@urbanfix.com}")
+    private String adminEmail;
+
+    @Value("${admin.password:Admin123!}")
+    private String adminPassword;
+
+    @Value("${admin.nombre:Admin}")
+    private String adminNombre;
+
+    @Value("${admin.apellido:Municipal}")
+    private String adminApellido;
 
     @Override
     @Transactional
@@ -27,6 +46,7 @@ public class DataInitializer implements CommandLineRunner {
         if (zonaRepository.count() == 0) {
             initializeZonas();
         }
+        initializeAdminUser();
     }
 
     private void initializeCategorias() {
@@ -90,5 +110,21 @@ public class DataInitializer implements CommandLineRunner {
         zonaRepository.save(este);
 
         log.info("Zonas iniciales creadas exitosamente");
+    }
+
+    private void initializeAdminUser() {
+        if (!usuarioRepository.existsByEmail(adminEmail)) {
+            Usuario admin = new Usuario();
+            admin.setNombre(adminNombre);
+            admin.setApellido(adminApellido);
+            admin.setEmail(adminEmail);
+            admin.setPassword(passwordEncoder.encode(adminPassword));
+            admin.setRol(Rol.ADMIN_MUNICIPAL);
+            usuarioRepository.save(admin);
+            log.info("Usuario admin inicial creado: {}", adminEmail);
+            log.warn("IMPORTANTE: Cambia la contraseña del admin en producción usando las variables de entorno");
+        } else {
+            log.info("Usuario admin ya existe: {}", adminEmail);
+        }
     }
 }

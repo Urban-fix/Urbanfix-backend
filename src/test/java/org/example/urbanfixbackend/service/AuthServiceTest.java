@@ -61,6 +61,9 @@ class AuthServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private org.example.urbanfixbackend.security.RateLimiterService rateLimiterService;
+
     @InjectMocks
     private AuthServiceImpl authService;
     
@@ -82,8 +85,7 @@ class AuthServiceTest {
                 "Test",
                 "User",
                 "test@example.com",
-                "Password123",
-                Rol.CIUDADANO
+                "Password123"
         );
         
         loginDTO = new LoginRequestDTO(
@@ -198,7 +200,7 @@ class AuthServiceTest {
 
         assertNotNull(result);
         assertTrue(result.message().contains("test@example.com"));
-        assertNotNull(result.token());
+        assertNull(result.token()); // Token no se devuelve por seguridad
         verify(passwordResetTokenRepository, times(1)).save(any(PasswordResetToken.class));
         verify(emailService, times(1)).sendPasswordResetEmail(eq("test@example.com"), anyString(), anyString());
     }
@@ -216,27 +218,29 @@ class AuthServiceTest {
     @Test
     void confirmPasswordReset_Success() {
         PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken("valid-token");
+        resetToken.setToken("123456"); // Código de 6 dígitos
         resetToken.setUsuario(usuario);
-        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(2));
 
-        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("valid-token", "NewPassword123");
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("123456", "NewPassword123");
 
-        when(passwordResetTokenRepository.findByToken("valid-token")).thenReturn(Optional.of(resetToken));
+        when(passwordResetTokenRepository.findByToken("123456")).thenReturn(Optional.of(resetToken));
         when(passwordEncoder.encode("NewPassword123")).thenReturn("encodedNewPassword");
+        when(rateLimiterService.tryConsume(anyString())).thenReturn(true);
 
         authService.confirmPasswordReset(confirmDTO);
 
         verify(passwordEncoder, times(1)).encode("NewPassword123");
         verify(usuarioRepository, times(1)).save(usuario);
         verify(passwordResetTokenRepository, times(1)).delete(resetToken);
+        verify(rateLimiterService, times(1)).resetBucket(anyString());
     }
 
     @Test
     void confirmPasswordReset_InvalidToken() {
-        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("invalid-token", "NewPassword123");
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("000000", "NewPassword123");
 
-        when(passwordResetTokenRepository.findByToken("invalid-token")).thenReturn(Optional.empty());
+        when(passwordResetTokenRepository.findByToken("000000")).thenReturn(Optional.empty());
 
         assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
                 () -> authService.confirmPasswordReset(confirmDTO));
@@ -245,16 +249,28 @@ class AuthServiceTest {
     @Test
     void confirmPasswordReset_ExpiredToken() {
         PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken("expired-token");
+        resetToken.setToken("000000");
         resetToken.setUsuario(usuario);
         resetToken.setExpiryDate(LocalDateTime.now().minusMinutes(1));
 
-        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("expired-token", "NewPassword123");
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("000000", "NewPassword123");
 
-        when(passwordResetTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(resetToken));
+        when(passwordResetTokenRepository.findByToken("000000")).thenReturn(Optional.of(resetToken));
+        when(rateLimiterService.tryConsume(anyString())).thenReturn(true);
 
         assertThrows(TokenExpiredException.class,
                 () -> authService.confirmPasswordReset(confirmDTO));
         verify(passwordResetTokenRepository, times(1)).delete(resetToken);
+        verify(rateLimiterService, times(1)).resetBucket(anyString());
+    }
+
+    @Test
+    void confirmPasswordReset_RateLimitExceeded() {
+        PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("123456", "NewPassword123");
+
+        when(rateLimiterService.tryConsume(anyString())).thenReturn(false);
+
+        assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
+                () -> authService.confirmPasswordReset(confirmDTO));
     }
 }

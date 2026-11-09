@@ -42,14 +42,19 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/v1/auth/password-reset/**").permitAll()
+                        .requestMatchers("/auth/me").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categorias/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/zonas/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reportes/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reportes/{reporteId}/comentarios").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reportes/{reporteId}/confirmaciones").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reportes/{reporteId}/confirmaciones/conteo").permitAll()
                         // /reportes/mis-reportes requiere autenticación
                         .requestMatchers("/api/v1/reportes/mis-reportes").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reportes/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
@@ -78,7 +83,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*")); // TODO: restringir a la URL real del frontend antes de produccion
+        
+        // Permitir localhost para desarrollo y dominio de producción
+        String allowedOrigins = System.getenv().getOrDefault("ALLOWED_ORIGINS", "http://localhost:5173");
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

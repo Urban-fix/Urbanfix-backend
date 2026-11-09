@@ -1,5 +1,6 @@
 package org.example.urbanfixbackend.mapper;
 
+import org.example.urbanfixbackend.dto.request.CreateUserDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.response.UsuarioResponseDTO;
 import org.example.urbanfixbackend.entity.Usuario;
@@ -36,5 +37,18 @@ public class UsuarioMapper {
 
     public static Usuario toEntity(RegisterRequestDTO dto) {
         return toEntity(dto, Rol.CIUDADANO);
+    }
+
+    public static Usuario toEntity(CreateUserDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        Usuario usuario = new Usuario();
+        usuario.setNombre(dto.nombre());
+        usuario.setApellido(dto.apellido());
+        usuario.setEmail(dto.email());
+        usuario.setPassword(dto.password());
+        usuario.setRol(dto.rol());
+        return usuario;
     }
 }

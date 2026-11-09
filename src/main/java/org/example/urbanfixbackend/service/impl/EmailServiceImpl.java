@@ -4,6 +4,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.service.EmailService;
+import org.springframework.context.annotation.Primary;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Service
+@Primary
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
@@ -65,7 +67,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendPasswordResetEmail(String to, String nombre, String resetLink) {
+    public void sendPasswordResetEmail(String to, String nombre, String resetCode) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -75,7 +77,7 @@ public class EmailServiceImpl implements EmailService {
             
             Context context = new Context();
             context.setVariable("nombre", nombre);
-            context.setVariable("resetLink", resetLink);
+            context.setVariable("resetCode", resetCode);
             
             String htmlContent = templateEngine.process("email/recuperar-password", context);
             helper.setText(htmlContent, true);
