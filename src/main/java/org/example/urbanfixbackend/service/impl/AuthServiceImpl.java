@@ -3,12 +3,15 @@ package org.example.urbanfixbackend.service.impl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import org.example.urbanfixbackend.dto.request.CreateUserDTO;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
+import org.example.urbanfixbackend.dto.request.PasswordResetValidateDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.response.AuthResponseDTO;
 import org.example.urbanfixbackend.dto.response.PasswordResetResponseDTO;
+import org.example.urbanfixbackend.dto.response.PasswordResetValidateResponseDTO;
 import org.example.urbanfixbackend.dto.response.UsuarioResponseDTO;
 import org.example.urbanfixbackend.entity.PasswordResetToken;
 import org.example.urbanfixbackend.entity.Usuario;
@@ -22,6 +25,7 @@ import org.example.urbanfixbackend.mapper.UsuarioMapper;
 import org.example.urbanfixbackend.repository.PasswordResetTokenRepository;
 import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.security.CustomUserDetails;
+import org.example.urbanfixbackend.security.RateLimiterService;
 import org.example.urbanfixbackend.security.jwt.JwtService;
 import org.example.urbanfixbackend.event.UsuarioRegistradoEvent;
 import org.example.urbanfixbackend.service.AuthService;
@@ -48,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final ApplicationEventPublisher eventPublisher;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final RateLimiterService rateLimiterService;
 
     @Override
     @Transactional
@@ -56,8 +61,9 @@ public class AuthServiceImpl implements AuthService {
             throw new EmailAlreadyExistsException(request.email());
         }
 
-        Rol rol = request.rol() != null ? request.rol() : Rol.CIUDADANO;
-        Usuario usuario = UsuarioMapper.toEntity(request, rol);
+        // Todos los registros públicos son CIUDADANO por defecto
+        // Solo los admins pueden crear usuarios con otros roles vía endpoint específico
+        Usuario usuario = UsuarioMapper.toEntity(request, Rol.CIUDADANO);
         usuario.setPassword(passwordEncoder.encode(request.password()));
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
@@ -141,35 +147,59 @@ public class AuthServiceImpl implements AuthService {
         // Eliminar tokens existentes para este usuario
         passwordResetTokenRepository.deleteByUsuario(usuario);
 
-        // Crear nuevo token
-        String token = UUID.randomUUID().toString();
-        LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(30);
+        // Generar código de 6 dígitos
+        String code = String.format("%06d", (int) (Math.random() * 1000000));
+        LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(2);
 
         PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
+        resetToken.setToken(code);
         resetToken.setUsuario(usuario);
         resetToken.setExpiryDate(expiryDate);
 
         passwordResetTokenRepository.save(resetToken);
 
-        // Enviar email con el enlace de reset
-        String resetLink = "https://urbanfix.com/reset-password?token=" + token;
-        emailService.sendPasswordResetEmail(usuario.getEmail(), usuario.getNombre(), resetLink);
+        // Enviar email con el código de 6 dígitos
+        emailService.sendPasswordResetEmail(usuario.getEmail(), usuario.getNombre(), code);
 
         return new PasswordResetResponseDTO(
                 "Email de recuperación enviado a " + usuario.getEmail(),
-                token
+                null
         );
     }
 
     @Override
     @Transactional
+    public PasswordResetValidateResponseDTO validatePasswordReset(PasswordResetValidateDTO request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.code())
+                .orElse(null);
+
+        if (resetToken == null) {
+            return new PasswordResetValidateResponseDTO(false, "Código inválido");
+        }
+
+        if (resetToken.isExpired()) {
+            passwordResetTokenRepository.delete(resetToken);
+            return new PasswordResetValidateResponseDTO(false, "El código ha expirado. Solicita uno nuevo.");
+        }
+
+        return new PasswordResetValidateResponseDTO(true, "Código válido");
+    }
+
+    @Override
+    @Transactional
     public void confirmPasswordReset(PasswordResetConfirmDTO request) {
+        // Rate limiting: máximo 3 intentos por token en 2 minutos
+        String rateLimitKey = "password-reset:" + request.token();
+        if (!rateLimiterService.tryConsume(rateLimitKey)) {
+            throw new InvalidTokenException("Demasiados intentos. Por favor, solicita un nuevo código.");
+        }
+
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.token())
                 .orElseThrow(() -> new InvalidTokenException("Token de reset inválido"));
 
         if (resetToken.isExpired()) {
             passwordResetTokenRepository.delete(resetToken);
+            rateLimiterService.resetBucket(rateLimitKey);
             throw new TokenExpiredException("El token de reset ha expirado");
         }
 
@@ -179,5 +209,21 @@ public class AuthServiceImpl implements AuthService {
 
         // Eliminar el token usado
         passwordResetTokenRepository.delete(resetToken);
+        rateLimiterService.resetBucket(rateLimitKey);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponseDTO createUser(CreateUserDTO request) {
+        if (usuarioRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyExistsException(request.email());
+        }
+
+        Usuario usuario = UsuarioMapper.toEntity(request);
+        usuario.setPassword(passwordEncoder.encode(request.password()));
+
+        Usuario savedUsuario = usuarioRepository.save(usuario);
+
+        return UsuarioMapper.toDTO(savedUsuario);
     }
 }

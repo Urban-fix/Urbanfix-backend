@@ -87,17 +87,16 @@ class CategoriaControllerIntegrationTest {
                 "Admin",
                 "User",
                 "admin@example.com",
-                "Password123",
-                Rol.ADMIN_MUNICIPAL
+                "Password123"
         );
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(adminDTO)))
                 .andExpect(status().isCreated());
 
         // Login como admin
         LoginRequestDTO loginDTO = new LoginRequestDTO("admin@example.com", "Password123");
-        String adminLoginResponse = mockMvc.perform(post("/api/v1/auth/login")
+        String adminLoginResponse = mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())

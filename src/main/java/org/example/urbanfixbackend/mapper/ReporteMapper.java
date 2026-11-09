@@ -3,6 +3,7 @@ package org.example.urbanfixbackend.mapper;
 import org.example.urbanfixbackend.dto.request.ReporteCreateDTO;
 import org.example.urbanfixbackend.dto.request.ReporteUpdateDTO;
 import org.example.urbanfixbackend.dto.response.ReporteDetailDTO;
+import org.example.urbanfixbackend.dto.response.ReportePublicDTO;
 import org.example.urbanfixbackend.dto.response.ReporteResponseDTO;
 import org.example.urbanfixbackend.entity.Reporte;
 
@@ -25,6 +26,25 @@ public class ReporteMapper {
                 reporte.getFechaCreacion(),
                 reporte.getEstadoActual(),
                 UsuarioMapper.toDTO(reporte.getUsuario()),
+                CategoriaMapper.toDTO(reporte.getCategoria()),
+                ZonaMapper.toDTO(reporte.getZona()),
+                confirmacionesCount
+        );
+    }
+
+    public static ReportePublicDTO toPublicDTO(Reporte reporte, long confirmacionesCount) {
+        if (reporte == null) {
+            return null;
+        }
+        return new ReportePublicDTO(
+                reporte.getId(),
+                reporte.getTitulo(),
+                reporte.getDescripcion(),
+                reporte.getLatitud(),
+                reporte.getLongitud(),
+                reporte.getFotoUrl(),
+                reporte.getFechaCreacion(),
+                reporte.getEstadoActual(),
                 CategoriaMapper.toDTO(reporte.getCategoria()),
                 ZonaMapper.toDTO(reporte.getZona()),
                 confirmacionesCount

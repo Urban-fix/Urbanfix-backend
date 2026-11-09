@@ -34,17 +34,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         log.debug("Procesando request: {} {}", request.getMethod(), request.getRequestURI());
+        
+        // Try to get token from Authorization header first (for backward compatibility)
+        String jwt = null;
         final String authHeader = request.getHeader("Authorization");
-        log.debug("Auth header: {}", authHeader);
-        log.debug("Empezar con Bearer? {}", authHeader != null && authHeader.startsWith("Bearer "));
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+            log.debug("Token from Authorization header");
+        } else {
+            // Try to get from cookie
+            jwt = getCookieValue(request, "accessToken");
+            log.debug("Token from cookie: {}", jwt != null ? "found" : "not found");
+        }
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("No Bearer token, continuing chain");
+        if (jwt == null) {
+            log.debug("No token found, continuing chain");
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String jwt = authHeader.substring(7);
 
         try {
             if (!jwtService.isAccessToken(jwt)) {
@@ -79,5 +87,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String getCookieValue(HttpServletRequest request, String cookieName) {
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (jakarta.servlet.http.Cookie cookie : cookies) {
+                if (cookieName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }

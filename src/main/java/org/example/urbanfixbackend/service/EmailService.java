@@ -6,5 +6,5 @@ public interface EmailService {
 
     void sendEstadoCambiadoEmail(String to, String reporteTitulo, String estadoAnterior, String estadoNuevo);
 
-    void sendPasswordResetEmail(String to, String nombre, String resetLink);
+    void sendPasswordResetEmail(String to, String nombre, String resetCode);
 }

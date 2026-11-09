@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
-@Primary
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceFileImpl implements EmailService {
@@ -63,13 +62,13 @@ public class EmailServiceFileImpl implements EmailService {
     }
 
     @Override
-    public void sendPasswordResetEmail(String to, String nombre, String resetLink) {
+    public void sendPasswordResetEmail(String to, String nombre, String resetCode) {
         try {
             Context context = new Context();
             context.setVariable("nombre", nombre);
-            context.setVariable("resetLink", resetLink);
+            context.setVariable("resetCode", resetCode);
             String htmlContent = templateEngine.process("email/recuperar-password", context);
-            
+
             saveEmailToFile(to, "Recuperación de Contraseña - UrbanFix 🔐", htmlContent);
             log.info("Email de recuperación de contraseña guardado en archivo para: {}", to);
         } catch (Exception e) {
