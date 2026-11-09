@@ -29,28 +29,28 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<UsuarioResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request, HttpServletResponse response) {
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request, HttpServletResponse response) {
         var authResponse = authService.register(request);
         setAuthCookies(response, authResponse.accessToken(), authResponse.refreshToken());
-        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse.usuario());
+        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponseDTO> login(@Valid @RequestBody LoginRequestDTO request, HttpServletResponse response) {
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request, HttpServletResponse response) {
         var authResponse = authService.login(request);
         setAuthCookies(response, authResponse.accessToken(), authResponse.refreshToken());
-        return ResponseEntity.ok(authResponse.usuario());
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<UsuarioResponseDTO> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<AuthResponseDTO> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = getCookieValue(request, "refreshToken");
         if (refreshToken == null) {
             throw new RuntimeException("No refresh token found in cookies");
         }
         var authResponse = authService.refreshToken(refreshToken);
         setAuthCookies(response, authResponse.accessToken(), authResponse.refreshToken());
-        return ResponseEntity.ok(authResponse.usuario());
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/password-reset/request")

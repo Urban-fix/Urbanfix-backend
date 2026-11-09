@@ -240,6 +240,7 @@ class AuthServiceTest {
     void confirmPasswordReset_InvalidToken() {
         PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("000000", "NewPassword123");
 
+        when(rateLimiterService.tryConsume(anyString())).thenReturn(true);
         when(passwordResetTokenRepository.findByToken("000000")).thenReturn(Optional.empty());
 
         assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
