@@ -53,6 +53,7 @@ class ZonaControllerIntegrationTest {
         registry.add("jwt.expiration-access", () -> "3600000");
         registry.add("jwt.expiration-refresh", () -> "86400000");
         registry.add("password-reset.token-expiration-minutes", () -> "15");
+        registry.add("APP_BASE_URL", () -> "http://localhost:8080");
     }
 
     @Autowired

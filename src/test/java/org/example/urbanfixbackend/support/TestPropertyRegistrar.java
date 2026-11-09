@@ -18,5 +18,6 @@ public final class TestPropertyRegistrar {
         registry.add("spring.mail.port", () -> "1025");
         registry.add("spring.mail.username", () -> "test");
         registry.add("spring.mail.password", () -> "test");
+        registry.add("APP_BASE_URL", () -> "http://localhost:8080");
     }
 }
