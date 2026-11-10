@@ -112,7 +112,7 @@ class ReporteControllerIntegrationTest {
                 "Password123"
         );
 
-        String registerResponse = mockMvc.perform(post("/auth/register")
+        String registerResponse = mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDTO)))
                 .andExpect(status().isCreated())
@@ -132,7 +132,7 @@ class ReporteControllerIntegrationTest {
         usuarioRepository.save(admin);
 
         LoginRequestDTO adminLogin = new LoginRequestDTO("admin@example.com", "Admin1234");
-        String adminLoginResponse = mockMvc.perform(post("/auth/login")
+        String adminLoginResponse = mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(adminLogin)))
                 .andExpect(status().isOk())
@@ -230,7 +230,7 @@ class ReporteControllerIntegrationTest {
     void loginAndCreateReporte_Flow() throws Exception {
         // Login con el usuario registrado
         LoginRequestDTO loginDTO = new LoginRequestDTO("test@example.com", "Password123");
-        String loginResponse = mockMvc.perform(post("/auth/login")
+        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())
