@@ -14,10 +14,8 @@ public final class TestPropertyRegistrar {
         registry.add("jwt.expiration-access", () -> "3600000");
         registry.add("jwt.expiration-refresh", () -> "86400000");
         registry.add("password-reset.token-expiration-minutes", () -> "15");
-        registry.add("spring.mail.host", () -> "localhost");
-        registry.add("spring.mail.port", () -> "1025");
-        registry.add("spring.mail.username", () -> "test");
-        registry.add("spring.mail.password", () -> "test");
+        registry.add("email.enabled", () -> "false");
+        registry.add("spring.mail.host", () -> "disabled");
         registry.add("APP_BASE_URL", () -> "http://localhost:8080");
     }
 }

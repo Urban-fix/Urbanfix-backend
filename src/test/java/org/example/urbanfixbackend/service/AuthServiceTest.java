@@ -211,8 +211,12 @@ class AuthServiceTest {
 
         when(usuarioRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        assertThrows(UsuarioNotFoundException.class,
-                () -> authService.requestPasswordReset(requestDTO));
+        PasswordResetResponseDTO result = authService.requestPasswordReset(requestDTO);
+
+        assertNotNull(result);
+        assertTrue(result.message().contains("Si el email está registrado"));
+        verify(passwordResetTokenRepository, never()).save(any(PasswordResetToken.class));
+        verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -225,6 +229,7 @@ class AuthServiceTest {
         PasswordResetConfirmDTO confirmDTO = new PasswordResetConfirmDTO("123456", "NewPassword123");
 
         when(passwordResetTokenRepository.findByToken("123456")).thenReturn(Optional.of(resetToken));
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(passwordEncoder.encode("NewPassword123")).thenReturn("encodedNewPassword");
         when(rateLimiterService.tryConsume(anyString())).thenReturn(true);
 

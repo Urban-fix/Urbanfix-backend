@@ -141,8 +141,15 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request) {
-        Usuario usuario = usuarioRepository.findByEmail(request.email())
-                .orElseThrow(() -> new UsuarioNotFoundException("No existe un usuario con el email: " + request.email()));
+        Usuario usuario = usuarioRepository.findByEmail(request.email()).orElse(null);
+
+        if (usuario == null) {
+            // No revelar si el email existe o no (seguridad)
+            return new PasswordResetResponseDTO(
+                    "Si el email está registrado, recibirás un código de recuperación",
+                    null
+            );
+        }
 
         // Eliminar tokens existentes para este usuario
         passwordResetTokenRepository.deleteByUsuario(usuario);
@@ -203,7 +210,10 @@ public class AuthServiceImpl implements AuthService {
             throw new TokenExpiredException("El token de reset ha expirado");
         }
 
-        Usuario usuario = resetToken.getUsuario();
+        // Recargar el usuario desde la base de datos para obtener los cambios más recientes
+        Usuario usuario = usuarioRepository.findById(resetToken.getUsuario().getId())
+                .orElseThrow(() -> new InvalidTokenException("Usuario no encontrado"));
+
         usuario.setPassword(passwordEncoder.encode(request.newPassword()));
         usuarioRepository.save(usuario);
 

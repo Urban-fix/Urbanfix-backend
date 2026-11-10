@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/reportes/{reporteId}/comentarios").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/reportes/{reporteId}/confirmaciones").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/reportes/{reporteId}/confirmaciones/conteo").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         // /reportes/mis-reportes requiere autenticación
                         .requestMatchers("/api/v1/reportes/mis-reportes").authenticated()
                         .anyRequest().authenticated()
