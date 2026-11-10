@@ -1,7 +1,6 @@
 package org.example.urbanfixbackend.controller;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.example.urbanfixbackend.dto.request.CreateUserDTO;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
@@ -13,6 +12,7 @@ import org.example.urbanfixbackend.dto.response.PasswordResetResponseDTO;
 import org.example.urbanfixbackend.dto.response.PasswordResetValidateResponseDTO;
 import org.example.urbanfixbackend.dto.response.UsuarioResponseDTO;
 import org.example.urbanfixbackend.service.AuthService;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +23,15 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
+    private final Environment environment;
+
+    public AuthController(AuthService authService, Environment environment) {
+        this.authService = authService;
+        this.environment = environment;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request, HttpServletResponse response) {
@@ -163,7 +168,6 @@ public class AuthController {
     }
 
     private boolean isProduction() {
-        String profile = System.getProperty("spring.profiles.active");
-        return "prod".equals(profile);
+        return environment.acceptsProfiles(org.springframework.core.env.Profiles.of("prod"));
     }
 }
