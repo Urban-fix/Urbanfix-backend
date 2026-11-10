@@ -22,7 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -95,35 +95,59 @@ public class AuthController {
     }
 
     private void setAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        Cookie accessCookie = new Cookie("accessToken", accessToken);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(15 * 60); // 15 minutos
-        response.addCookie(accessCookie);
+        boolean isSecure = isProduction();
+        
+        if (isSecure) {
+            // Para HTTPS con SameSite=None (requerido para cross-origin cookies)
+            response.addHeader("Set-Cookie", 
+                String.format("%s=%s; Path=/; Max-Age=%d; HttpOnly; Secure; SameSite=None", 
+                    "accessToken", accessToken, 15 * 60));
+            response.addHeader("Set-Cookie", 
+                String.format("%s=%s; Path=/; Max-Age=%d; HttpOnly; Secure; SameSite=None", 
+                    "refreshToken", refreshToken, 7 * 24 * 60 * 60));
+        } else {
+            // Para desarrollo HTTP
+            Cookie accessCookie = new Cookie("accessToken", accessToken);
+            accessCookie.setHttpOnly(true);
+            accessCookie.setSecure(false);
+            accessCookie.setPath("/");
+            accessCookie.setMaxAge(15 * 60);
+            response.addCookie(accessCookie);
 
-        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 días
-        response.addCookie(refreshCookie);
+            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setSecure(false);
+            refreshCookie.setPath("/");
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+            response.addCookie(refreshCookie);
+        }
     }
 
     private void clearAuthCookies(HttpServletResponse response) {
-        Cookie accessCookie = new Cookie("accessToken", "");
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(0);
-        response.addCookie(accessCookie);
+        boolean isSecure = isProduction();
+        
+        if (isSecure) {
+            // Para HTTPS con SameSite=None
+            response.addHeader("Set-Cookie", 
+                "accessToken=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None");
+            response.addHeader("Set-Cookie", 
+                "refreshToken=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None");
+        } else {
+            // Para desarrollo HTTP
+            Cookie accessCookie = new Cookie("accessToken", "");
+            accessCookie.setHttpOnly(true);
+            accessCookie.setSecure(false);
+            accessCookie.setPath("/");
+            accessCookie.setMaxAge(0);
+            response.addCookie(accessCookie);
 
-        Cookie refreshCookie = new Cookie("refreshToken", "");
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(0);
-        response.addCookie(refreshCookie);
+            Cookie refreshCookie = new Cookie("refreshToken", "");
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setSecure(false);
+            refreshCookie.setPath("/");
+            refreshCookie.setMaxAge(0);
+            response.addCookie(refreshCookie);
+        }
     }
 
     private String getCookieValue(HttpServletRequest request, String cookieName) {
@@ -136,5 +160,10 @@ public class AuthController {
             }
         }
         return null;
+    }
+
+    private boolean isProduction() {
+        String profile = System.getProperty("spring.profiles.active");
+        return "prod".equals(profile);
     }
 }

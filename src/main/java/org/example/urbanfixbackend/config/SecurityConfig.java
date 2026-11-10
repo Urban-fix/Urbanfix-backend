@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/v1/auth/password-reset/**").permitAll()
-                        .requestMatchers("/auth/me").authenticated()
+                        .requestMatchers("/api/v1/auth/me").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categorias/**").permitAll()

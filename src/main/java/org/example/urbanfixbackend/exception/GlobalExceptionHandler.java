@@ -1,5 +1,6 @@
 package org.example.urbanfixbackend.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.dto.response.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({ReporteNotFoundException.class, UsuarioNotFoundException.class,
@@ -139,6 +141,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
+        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         ErrorResponseDTO error = new ErrorResponseDTO(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

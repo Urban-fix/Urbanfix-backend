@@ -95,7 +95,7 @@ class CategoriaControllerIntegrationTest {
 
         // Login como admin
         LoginRequestDTO loginDTO = new LoginRequestDTO("admin@example.com", "Password123");
-        String adminLoginResponse = mockMvc.perform(post("/auth/login")
+        String adminLoginResponse = mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())
