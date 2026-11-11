@@ -11,8 +11,6 @@ import java.util.concurrent.Executor;
 @EnableAsync // Activa el soporte para tareas asincronas
 // De tipo ThreadPoolTaskExecutor que es un executor de tareas asincronas
 public class AsyncConfig {
-
-    // Bean que configura el executor de tareas asincronas
     @Bean(name = "taskExecutor")
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

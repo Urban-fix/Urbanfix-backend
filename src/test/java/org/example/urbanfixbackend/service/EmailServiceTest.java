@@ -1,7 +1,7 @@
 package org.example.urbanfixbackend.service;
 
 import jakarta.mail.internet.MimeMessage;
-import org.example.urbanfixbackend.service.impl.EmailServiceImpl;
+import org.example.urbanfixbackend.service.impl.EmailServiceImplBrevo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ class EmailServiceTest {
     private MimeMessageHelper mimeMessageHelper;
 
     @InjectMocks
-    private EmailServiceImpl emailService;
+    private EmailServiceImplBrevo emailService;
 
     @BeforeEach
     void setUp() {

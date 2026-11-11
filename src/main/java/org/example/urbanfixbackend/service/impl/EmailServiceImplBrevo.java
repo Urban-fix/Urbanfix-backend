@@ -4,6 +4,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.urbanfixbackend.service.EmailService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,13 +15,19 @@ import org.thymeleaf.context.Context;
 
 @Service
 @Primary
-@ConditionalOnProperty(name = "spring.mail.host", havingValue = "disabled", matchIfMissing = false)
+@ConditionalOnProperty(name = "email.enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
-public class EmailServiceImpl implements EmailService {
+public class EmailServiceImplBrevo implements EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+
+    @Value("${spring.mail.from:}")
+    private String fromEmail;
+
+    @Value("${spring.mail.from.name:UrbanFix}")
+    private String fromName;
 
     @Override
     public void sendWelcomeEmail(String to, String nombre) {
@@ -30,6 +37,9 @@ public class EmailServiceImpl implements EmailService {
             
             helper.setTo(to);
             helper.setSubject("Bienvenido a UrbanFix 🏙️");
+            if (fromEmail != null && !fromEmail.isEmpty()) {
+                helper.setFrom(fromEmail, fromName);
+            }
             
             Context context = new Context();
             context.setVariable("nombre", nombre);
@@ -52,6 +62,9 @@ public class EmailServiceImpl implements EmailService {
             
             helper.setTo(to);
             helper.setSubject("Actualización de reporte: " + reporteTitulo);
+            if (fromEmail != null && !fromEmail.isEmpty()) {
+                helper.setFrom(fromEmail, fromName);
+            }
             
             Context context = new Context();
             context.setVariable("reporteTitulo", reporteTitulo);
@@ -76,6 +89,9 @@ public class EmailServiceImpl implements EmailService {
             
             helper.setTo(to);
             helper.setSubject("Recuperación de Contraseña - UrbanFix 🔐");
+            if (fromEmail != null && !fromEmail.isEmpty()) {
+                helper.setFrom(fromEmail, fromName);
+            }
             
             Context context = new Context();
             context.setVariable("nombre", nombre);

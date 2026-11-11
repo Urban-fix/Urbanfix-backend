@@ -2,6 +2,7 @@ package org.example.urbanfixbackend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import org.example.urbanfixbackend.AbstractIntegrationTest;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.request.ZonaCreateDTO;
@@ -11,16 +12,10 @@ import org.example.urbanfixbackend.repository.ZonaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -29,32 +24,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@Testcontainers
-class ZonaControllerIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("app.email.enabled", () -> "false");
-        registry.add("MAIL_HOST", () -> "localhost");
-        registry.add("MAIL_PORT", () -> "3025");
-        registry.add("MAIL_USERNAME", () -> "test");
-        registry.add("MAIL_PASSWORD", () -> "test");
-        registry.add("jwt.secret", () -> "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=");
-        registry.add("jwt.expiration-access", () -> "3600000");
-        registry.add("jwt.expiration-refresh", () -> "86400000");
-        registry.add("password-reset.token-expiration-minutes", () -> "15");
-        registry.add("APP_BASE_URL", () -> "http://localhost:8080");
-    }
+class ZonaControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -79,8 +49,6 @@ class ZonaControllerIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
-        zonaRepository.deleteAll();
-        usuarioRepository.deleteAll();
 
         // Crear usuario admin directamente en la base de datos con rol ADMIN_MUNICIPAL
         org.example.urbanfixbackend.entity.Usuario admin = new org.example.urbanfixbackend.entity.Usuario();
