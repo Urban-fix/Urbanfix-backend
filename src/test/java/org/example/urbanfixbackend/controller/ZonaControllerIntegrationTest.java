@@ -2,6 +2,7 @@ package org.example.urbanfixbackend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import org.example.urbanfixbackend.AbstractIntegrationTest;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.RegisterRequestDTO;
 import org.example.urbanfixbackend.dto.request.ZonaCreateDTO;
@@ -11,9 +12,7 @@ import org.example.urbanfixbackend.repository.ZonaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -25,9 +24,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@ActiveProfiles("test")
-class ZonaControllerIntegrationTest {
+class ZonaControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -52,8 +49,6 @@ class ZonaControllerIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
-        zonaRepository.deleteAll();
-        usuarioRepository.deleteAll();
 
         // Crear usuario admin directamente en la base de datos con rol ADMIN_MUNICIPAL
         org.example.urbanfixbackend.entity.Usuario admin = new org.example.urbanfixbackend.entity.Usuario();
