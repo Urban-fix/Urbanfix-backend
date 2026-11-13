@@ -96,6 +96,7 @@ class AuthServiceTest {
     
     @Test
     void register_Success() {
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
         when(usuarioRepository.existsByEmail("test@example.com")).thenReturn(false);
         when(passwordEncoder.encode("Password123")).thenReturn("encodedPassword");
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
@@ -113,6 +114,7 @@ class AuthServiceTest {
     
     @Test
     void register_EmailAlreadyExists() {
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
         when(usuarioRepository.existsByEmail("test@example.com")).thenReturn(true);
         
         assertThrows(EmailAlreadyExistsException.class, () -> authService.register(registerDTO));
@@ -121,6 +123,7 @@ class AuthServiceTest {
     
     @Test
     void login_Success() {
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
         Authentication authentication = mock(Authentication.class);
         CustomUserDetails userDetails = new CustomUserDetails(usuario);
         
@@ -140,6 +143,7 @@ class AuthServiceTest {
     
     @Test
     void login_InvalidCredentials() {
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
 

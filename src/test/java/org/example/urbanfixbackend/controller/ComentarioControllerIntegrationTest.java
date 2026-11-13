@@ -33,11 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ComentarioControllerIntegrationTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-
-    private MockMvc mockMvc;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
@@ -63,10 +58,6 @@ class ComentarioControllerIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .build();
-
         // Crear usuario admin directamente en la base de datos con rol ADMIN_MUNICIPAL
         org.example.urbanfixbackend.entity.Usuario admin = new org.example.urbanfixbackend.entity.Usuario();
         admin.setNombre("Admin");

@@ -38,6 +38,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -57,6 +58,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDTO register(RegisterRequestDTO request) {
+        // Rate limiting: máximo 5 registros por email en 1 hora
+        String rateLimitKey = "register:" + request.email();
+        if (!rateLimiterService.tryConsume(rateLimitKey, 5, 60)) {
+            throw new InvalidTokenException("Demasiados intentos de registro. Por favor, espera antes de intentar nuevamente.");
+        }
+
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(request.email());
         }
@@ -84,6 +91,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDTO login(LoginRequestDTO request) {
+        // Rate limiting: máximo 5 intentos de login por email en 15 minutos
+        String rateLimitKey = "login:" + request.email();
+        if (!rateLimiterService.tryConsume(rateLimitKey, 5, 15)) {
+            throw new InvalidTokenException("Demasiados intentos de login. Por favor, espera antes de intentar nuevamente.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.email(),
@@ -154,8 +167,9 @@ public class AuthServiceImpl implements AuthService {
         // Eliminar tokens existentes para este usuario
         passwordResetTokenRepository.deleteByUsuario(usuario);
 
-        // Generar código de 6 dígitos
-        String code = String.format("%06d", (int) (Math.random() * 1000000));
+        // Generar código de 6 dígitos criptográficamente seguro
+        SecureRandom secureRandom = new SecureRandom();
+        String code = String.format("%06d", secureRandom.nextInt(1000000));
         LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(2);
 
         PasswordResetToken resetToken = new PasswordResetToken();
