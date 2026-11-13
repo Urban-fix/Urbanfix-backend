@@ -34,12 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ReporteControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private WebApplicationContext webApplicationContext;
-
-    @Autowired
     private SecurityFilterChain securityFilterChain;
-
-    private MockMvc mockMvc;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -65,10 +60,6 @@ class ReporteControllerIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .build();
-
         // Registrar usuario de prueba
         RegisterRequestDTO registerDTO = new RegisterRequestDTO(
                 "Test",

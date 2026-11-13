@@ -14,25 +14,33 @@ public class RateLimiterService {
     private static class RateLimitInfo {
         private int attempts;
         private LocalDateTime windowStart;
+        private int maxAttempts;
+        private int windowMinutes;
 
-        RateLimitInfo() {
+        RateLimitInfo(int maxAttempts, int windowMinutes) {
             this.attempts = 0;
             this.windowStart = LocalDateTime.now();
+            this.maxAttempts = maxAttempts;
+            this.windowMinutes = windowMinutes;
         }
     }
 
     public boolean tryConsume(String key) {
-        RateLimitInfo info = rateLimits.computeIfAbsent(key, k -> new RateLimitInfo());
+        return tryConsume(key, 3, 2); // Valores por defecto: 3 intentos en 2 minutos
+    }
+
+    public boolean tryConsume(String key, int maxAttempts, int windowMinutes) {
+        RateLimitInfo info = rateLimits.computeIfAbsent(key, k -> new RateLimitInfo(maxAttempts, windowMinutes));
         LocalDateTime now = LocalDateTime.now();
 
-        // Reset si la ventana de 2 minutos ha pasado
-        if (info.windowStart.plusMinutes(2).isBefore(now)) {
+        // Reset si la ventana de tiempo ha pasado
+        if (info.windowStart.plusMinutes(info.windowMinutes).isBefore(now)) {
             info.attempts = 0;
             info.windowStart = now;
         }
 
-        // Verificar si excede el límite de 3 intentos
-        if (info.attempts >= 3) {
+        // Verificar si excede el límite de intentos
+        if (info.attempts >= info.maxAttempts) {
             return false;
         }
 
