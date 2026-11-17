@@ -109,7 +109,8 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Failed",
-                "Invalid request parameters",
+                // El primer error en español (p. ej. "La contraseña debe tener al menos 8 caracteres...")
+                errors.isEmpty() ? "Datos inválidos" : errors.values().iterator().next(),
                 "",
                 errors
         );

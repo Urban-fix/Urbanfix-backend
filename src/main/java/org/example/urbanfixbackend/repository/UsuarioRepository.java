@@ -17,6 +17,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByEmail(String email);
 
+    /** Busca sin distinguir mayúsculas: "Juan@Gmail.com" y "juan@gmail.com" son la misma cuenta. */
+    Optional<Usuario> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
+
     @Query("SELECT u FROM Usuario u WHERE u.rol = :rol")
     List<Usuario> findByRol(@Param("rol") Rol rol);
 
