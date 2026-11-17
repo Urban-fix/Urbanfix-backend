@@ -2,6 +2,7 @@ package org.example.urbanfixbackend.controller;
 
 import jakarta.validation.Valid;
 import org.example.urbanfixbackend.dto.request.CreateUserDTO;
+import org.example.urbanfixbackend.dto.request.GoogleLoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
@@ -43,6 +44,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request, HttpServletResponse response) {
         var authResponse = authService.login(request);
+        setAuthCookies(response, authResponse.accessToken(), authResponse.refreshToken());
+        return ResponseEntity.ok(authResponse);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponseDTO> loginWithGoogle(@Valid @RequestBody GoogleLoginRequestDTO request, HttpServletResponse response) {
+        var authResponse = authService.loginWithGoogle(request);
         setAuthCookies(response, authResponse.accessToken(), authResponse.refreshToken());
         return ResponseEntity.ok(authResponse);
     }
