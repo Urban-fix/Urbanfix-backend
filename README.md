@@ -70,6 +70,7 @@ UrbanFix Backend implementa las siguientes funcionalidades principales:
 **Gestión de Usuarios y Autenticación**
 - Sistema de registro de usuarios con validación de email único
 - Autenticación mediante JWT (JSON Web Tokens) con tokens de acceso y refresh
+- Inicio de sesión con Google (frontend web y app móvil): el backend valida el idToken de Google y crea la cuenta como CIUDADANO si no existe
 - Gestión de roles: CIUDADANO, ADMIN_MUNICIPAL, TECNICO, SUPERVISOR, OPERADOR, AUDITOR
 - Recuperación de contraseña mediante tokens temporales enviados por email
 - Perfil de usuario con información personal y rol asignado
@@ -474,7 +475,7 @@ Aunque el MVP está completo y funcional, existen áreas identificadas para mejo
 - Módulo de gamificación para incentivar participación ciudadana
 
 **Mejoras de Seguridad**
-- Implementar OAuth2 para autenticación con proveedores externos (Google, Facebook)
+- Agregar más proveedores de inicio de sesión (Facebook, Apple); Google ya está implementado
 - Agregar 2FA (Two-Factor Authentication)
 - Implementar auditoría completa de todas las acciones sensibles
 - Agregar encriptación de campos sensibles en la base de datos
@@ -522,6 +523,8 @@ cd Urbanfix-backend
 ```bash
 cp .env.example .env
 ```
+   Para el inicio de sesión con Google, define `GOOGLE_CLIENT_IDS` con el Web Client ID de Google Cloud
+   (el mismo que usan el frontend y la app móvil). Sin esa variable, `/api/v1/auth/google` responde con error.
 
 3. Iniciar base de datos con Docker Compose:
 ```bash
@@ -542,6 +545,7 @@ docker-compose up -d
 
 - `POST /api/v1/auth/register` - Registro de usuario
 - `POST /api/v1/auth/login` - Inicio de sesión
+- `POST /api/v1/auth/google` - Inicio de sesión / registro con Google (`{ "idToken": "..." }`)
 - `GET /api/v1/reportes` - Listar reportes (con filtros)
 - `POST /api/v1/reportes` - Crear reporte
 - `PATCH /api/v1/reportes/{id}/estado` - Cambiar estado de reporte
