@@ -63,18 +63,23 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponseDTO register(RegisterRequestDTO request) {
         // Rate limiting: máximo 5 registros por email en 1 hora
-        String rateLimitKey = "register:" + request.email();
+        String email = normalizarEmail(request.email());
+        String rateLimitKey = "register:" + email;
         if (!rateLimiterService.tryConsume(rateLimitKey, 5, 60)) {
             throw new InvalidTokenException("Demasiados intentos de registro. Por favor, espera antes de intentar nuevamente.");
         }
 
-        if (usuarioRepository.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException(request.email());
+        // Sin distinguir mayúsculas, para no crear dos cuentas con "Juan@Gmail.com" y "juan@gmail.com"
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
+            throw new EmailAlreadyExistsException(email);
         }
 
         // Todos los registros públicos son CIUDADANO por defecto
         // Solo los admins pueden crear usuarios con otros roles vía endpoint específico
         Usuario usuario = UsuarioMapper.toEntity(request, Rol.CIUDADANO);
+        usuario.setEmail(email);
+        usuario.setNombre(usuario.getNombre().trim());
+        usuario.setApellido(usuario.getApellido().trim());
         usuario.setPassword(passwordEncoder.encode(request.password()));
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
@@ -96,17 +101,21 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponseDTO login(LoginRequestDTO request) {
         // Rate limiting: máximo 5 intentos de login por email en 15 minutos
-        String rateLimitKey = "login:" + request.email();
+        String email = normalizarEmail(request.email());
+        String rateLimitKey = "login:" + email;
         if (!rateLimiterService.tryConsume(rateLimitKey, 5, 15)) {
             throw new InvalidTokenException("Demasiados intentos de login. Por favor, espera antes de intentar nuevamente.");
         }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.email(),
+                        email,
                         request.password()
                 )
         );
+
+        // Login correcto: se reinicia el contador para que solo cuenten los intentos fallidos
+        rateLimiterService.resetBucket(rateLimitKey);
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String accessToken = jwtService.generateToken(userDetails);
@@ -135,8 +144,10 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidTokenException("Demasiados intentos de login. Por favor, espera antes de intentar nuevamente.");
         }
 
-        Usuario usuario = usuarioRepository.findByEmail(google.email())
+        // Sin distinguir mayúsculas: si se registró como "Juan@Gmail.com", Google entra a esa misma cuenta
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(google.email())
                 .orElseGet(() -> registrarUsuarioDeGoogle(google));
+        rateLimiterService.resetBucket(rateLimitKey);
 
         CustomUserDetails userDetails = new CustomUserDetails(usuario);
         String accessToken = jwtService.generateToken(userDetails);
@@ -163,6 +174,11 @@ public class AuthServiceImpl implements AuthService {
         Usuario saved = usuarioRepository.save(usuario);
         eventPublisher.publishEvent(new UsuarioRegistradoEvent(saved));
         return saved;
+    }
+
+    /** Emails sin espacios y en minúsculas, para que no dependa de cómo los escribió el usuario. */
+    private static String normalizarEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private static String primerNoVacio(String... valores) {
@@ -216,7 +232,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request) {
-        Usuario usuario = usuarioRepository.findByEmail(request.email()).orElse(null);
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(normalizarEmail(request.email())).orElse(null);
 
         if (usuario == null) {
             // No revelar si el email existe o no (seguridad)
@@ -301,11 +317,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public UsuarioResponseDTO createUser(CreateUserDTO request) {
-        if (usuarioRepository.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException(request.email());
+        String email = normalizarEmail(request.email());
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
+            throw new EmailAlreadyExistsException(email);
         }
 
         Usuario usuario = UsuarioMapper.toEntity(request);
+        usuario.setEmail(email);
         usuario.setPassword(passwordEncoder.encode(request.password()));
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
