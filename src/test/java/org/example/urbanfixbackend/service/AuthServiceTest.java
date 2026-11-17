@@ -103,7 +103,7 @@ class AuthServiceTest {
     @Test
     void register_Success() {
         when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
-        when(usuarioRepository.existsByEmail("test@example.com")).thenReturn(false);
+        when(usuarioRepository.existsByEmailIgnoreCase("test@example.com")).thenReturn(false);
         when(passwordEncoder.encode("Password123")).thenReturn("encodedPassword");
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
         when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("accessToken");
@@ -121,7 +121,7 @@ class AuthServiceTest {
     @Test
     void register_EmailAlreadyExists() {
         when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
-        when(usuarioRepository.existsByEmail("test@example.com")).thenReturn(true);
+        when(usuarioRepository.existsByEmailIgnoreCase("test@example.com")).thenReturn(true);
         
         assertThrows(EmailAlreadyExistsException.class, () -> authService.register(registerDTO));
         verify(usuarioRepository, never()).save(any(Usuario.class));
@@ -202,7 +202,7 @@ class AuthServiceTest {
     void requestPasswordReset_Success() {
         PasswordResetRequestDTO requestDTO = new PasswordResetRequestDTO("test@example.com");
 
-        when(usuarioRepository.findByEmail("test@example.com")).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(usuario));
         doNothing().when(passwordResetTokenRepository).deleteByUsuario(any(Usuario.class));
         when(passwordResetTokenRepository.save(any(PasswordResetToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -219,7 +219,7 @@ class AuthServiceTest {
     void requestPasswordReset_UserNotFound() {
         PasswordResetRequestDTO requestDTO = new PasswordResetRequestDTO("nonexistent@example.com");
 
-        when(usuarioRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByEmailIgnoreCase("nonexistent@example.com")).thenReturn(Optional.empty());
 
         PasswordResetResponseDTO result = authService.requestPasswordReset(requestDTO);
 
@@ -297,7 +297,7 @@ class AuthServiceTest {
 
         when(googleTokenVerifier.verify("google-id-token")).thenReturn(info);
         when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
-        when(usuarioRepository.findByEmail("vecino@gmail.com")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByEmailIgnoreCase("vecino@gmail.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode(anyString())).thenReturn("randomEncoded");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
             Usuario u = inv.getArgument(0);
@@ -326,7 +326,7 @@ class AuthServiceTest {
 
         when(googleTokenVerifier.verify("google-id-token")).thenReturn(info);
         when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
-        when(usuarioRepository.findByEmail("test@example.com")).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(usuario));
         when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("accessToken");
         when(jwtService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refreshToken");
 
@@ -347,5 +347,52 @@ class AuthServiceTest {
         assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
                 () -> authService.loginWithGoogle(request));
         verifyNoInteractions(usuarioRepository, jwtService);
+    }
+
+    @Test
+    void register_EmailConMayusculasYEspacios_SeGuardaNormalizado() {
+        RegisterRequestDTO dto = new RegisterRequestDTO(" Ana ", "Paz", "  Ana.Paz@Gmail.COM ", "Password123");
+
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
+        when(usuarioRepository.existsByEmailIgnoreCase("ana.paz@gmail.com")).thenReturn(false);
+        when(passwordEncoder.encode("Password123")).thenReturn("encodedPassword");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("accessToken");
+        when(jwtService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refreshToken");
+
+        AuthResponseDTO result = authService.register(dto);
+
+        assertEquals("ana.paz@gmail.com", result.usuario().email());
+        assertEquals("Ana", result.usuario().nombre());
+        verify(rateLimiterService).tryConsume("register:ana.paz@gmail.com", 5, 60);
+    }
+
+    @Test
+    void register_EmailYaExisteConOtrasMayusculas_Falla() {
+        RegisterRequestDTO dto = new RegisterRequestDTO("Test", "User", "TEST@example.com", "Password123");
+
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
+        when(usuarioRepository.existsByEmailIgnoreCase("test@example.com")).thenReturn(true);
+
+        assertThrows(EmailAlreadyExistsException.class, () -> authService.register(dto));
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
+    void login_Exitoso_ReiniciaElContadorDeIntentos() {
+        LoginRequestDTO dto = new LoginRequestDTO(" Test@Example.com ", "Password123");
+        Authentication authentication = mock(Authentication.class);
+        CustomUserDetails userDetails = new CustomUserDetails(usuario);
+
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(jwtService.generateToken(userDetails)).thenReturn("accessToken");
+        when(jwtService.generateRefreshToken(userDetails)).thenReturn("refreshToken");
+
+        authService.login(dto);
+
+        verify(rateLimiterService).tryConsume("login:test@example.com", 5, 15);
+        verify(rateLimiterService).resetBucket("login:test@example.com");
     }
 }
