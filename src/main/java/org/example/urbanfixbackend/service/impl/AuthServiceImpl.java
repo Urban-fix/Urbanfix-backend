@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.example.urbanfixbackend.dto.request.CreateUserDTO;
+import org.example.urbanfixbackend.dto.request.GoogleLoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
@@ -26,6 +27,8 @@ import org.example.urbanfixbackend.repository.PasswordResetTokenRepository;
 import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.security.CustomUserDetails;
 import org.example.urbanfixbackend.security.RateLimiterService;
+import org.example.urbanfixbackend.security.google.GoogleTokenVerifier;
+import org.example.urbanfixbackend.security.google.GoogleUserInfo;
 import org.example.urbanfixbackend.security.jwt.JwtService;
 import org.example.urbanfixbackend.event.UsuarioRegistradoEvent;
 import org.example.urbanfixbackend.service.AuthService;
@@ -54,6 +57,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final RateLimiterService rateLimiterService;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     @Override
     @Transactional
@@ -114,6 +118,64 @@ public class AuthServiceImpl implements AuthService {
                 "Bearer",
                 UsuarioMapper.toDTO(userDetails.getUsuario())
         );
+    }
+
+    /**
+     * Login / registro con Google (web y app móvil).
+     * Si el email ya existe se inicia sesión con esa cuenta; si no, se crea un CIUDADANO nuevo.
+     */
+    @Override
+    @Transactional
+    public AuthResponseDTO loginWithGoogle(GoogleLoginRequestDTO request) {
+        GoogleUserInfo google = googleTokenVerifier.verify(request.idToken());
+
+        // Rate limiting: mismo límite que el login normal
+        String rateLimitKey = "login:" + google.email();
+        if (!rateLimiterService.tryConsume(rateLimitKey, 5, 15)) {
+            throw new InvalidTokenException("Demasiados intentos de login. Por favor, espera antes de intentar nuevamente.");
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(google.email())
+                .orElseGet(() -> registrarUsuarioDeGoogle(google));
+
+        CustomUserDetails userDetails = new CustomUserDetails(usuario);
+        String accessToken = jwtService.generateToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
+
+        return new AuthResponseDTO(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                UsuarioMapper.toDTO(usuario)
+        );
+    }
+
+    private Usuario registrarUsuarioDeGoogle(GoogleUserInfo google) {
+        Usuario usuario = new Usuario();
+        usuario.setEmail(google.email());
+        usuario.setNombre(limitar(primerNoVacio(google.givenName(), google.fullName(), google.email().split("@")[0]), 100));
+        usuario.setApellido(limitar(primerNoVacio(google.familyName(), "-"), 100));
+        // La cuenta no tiene contraseña propia: se guarda una aleatoria que nadie conoce.
+        // Si el usuario quiere entrar con email y contraseña, puede usar "¿Olvidaste tu contraseña?".
+        usuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        usuario.setRol(Rol.CIUDADANO);
+
+        Usuario saved = usuarioRepository.save(usuario);
+        eventPublisher.publishEvent(new UsuarioRegistradoEvent(saved));
+        return saved;
+    }
+
+    private static String primerNoVacio(String... valores) {
+        for (String v : valores) {
+            if (v != null && !v.isBlank()) {
+                return v.trim();
+            }
+        }
+        return "-";
+    }
+
+    private static String limitar(String valor, int max) {
+        return valor.length() > max ? valor.substring(0, max) : valor;
     }
 
     @Override

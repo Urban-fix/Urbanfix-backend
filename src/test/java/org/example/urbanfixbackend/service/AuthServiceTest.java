@@ -1,6 +1,7 @@
 package org.example.urbanfixbackend.service;
 
 import io.jsonwebtoken.JwtException;
+import org.example.urbanfixbackend.dto.request.GoogleLoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
@@ -16,6 +17,8 @@ import org.example.urbanfixbackend.exception.UsuarioNotFoundException;
 import org.example.urbanfixbackend.repository.PasswordResetTokenRepository;
 import org.example.urbanfixbackend.repository.UsuarioRepository;
 import org.example.urbanfixbackend.security.CustomUserDetails;
+import org.example.urbanfixbackend.security.google.GoogleTokenVerifier;
+import org.example.urbanfixbackend.security.google.GoogleUserInfo;
 import org.example.urbanfixbackend.security.jwt.JwtService;
 import org.example.urbanfixbackend.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +66,9 @@ class AuthServiceTest {
 
     @Mock
     private org.example.urbanfixbackend.security.RateLimiterService rateLimiterService;
+
+    @Mock
+    private GoogleTokenVerifier googleTokenVerifier;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -282,5 +288,64 @@ class AuthServiceTest {
 
         assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
                 () -> authService.confirmPasswordReset(confirmDTO));
+    }
+
+    @Test
+    void loginWithGoogle_UsuarioNuevo_LoCreaComoCiudadano() {
+        GoogleLoginRequestDTO request = new GoogleLoginRequestDTO("google-id-token");
+        GoogleUserInfo info = new GoogleUserInfo("sub-1", "vecino@gmail.com", "Vecino", "Prueba", "Vecino Prueba");
+
+        when(googleTokenVerifier.verify("google-id-token")).thenReturn(info);
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
+        when(usuarioRepository.findByEmail("vecino@gmail.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("randomEncoded");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario u = inv.getArgument(0);
+            u.setId(2L);
+            return u;
+        });
+        when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("accessToken");
+        when(jwtService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refreshToken");
+
+        AuthResponseDTO result = authService.loginWithGoogle(request);
+
+        assertEquals("accessToken", result.accessToken());
+        assertEquals("refreshToken", result.refreshToken());
+        assertEquals("vecino@gmail.com", result.usuario().email());
+        assertEquals("Vecino", result.usuario().nombre());
+        assertEquals("Prueba", result.usuario().apellido());
+        assertEquals(Rol.CIUDADANO, result.usuario().rol());
+        verify(usuarioRepository, times(1)).save(any(Usuario.class));
+        verify(eventPublisher, times(1)).publishEvent(any());
+    }
+
+    @Test
+    void loginWithGoogle_UsuarioExistente_NoCreaOtro() {
+        GoogleLoginRequestDTO request = new GoogleLoginRequestDTO("google-id-token");
+        GoogleUserInfo info = new GoogleUserInfo("sub-1", "test@example.com", "Test", "User", "Test User");
+
+        when(googleTokenVerifier.verify("google-id-token")).thenReturn(info);
+        when(rateLimiterService.tryConsume(anyString(), anyInt(), anyInt())).thenReturn(true);
+        when(usuarioRepository.findByEmail("test@example.com")).thenReturn(Optional.of(usuario));
+        when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("accessToken");
+        when(jwtService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refreshToken");
+
+        AuthResponseDTO result = authService.loginWithGoogle(request);
+
+        assertEquals(1L, result.usuario().id());
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void loginWithGoogle_TokenInvalido_NoTocaLaBaseDeDatos() {
+        GoogleLoginRequestDTO request = new GoogleLoginRequestDTO("token-falso");
+
+        when(googleTokenVerifier.verify("token-falso"))
+                .thenThrow(new org.example.urbanfixbackend.exception.InvalidTokenException("Token de Google inválido o expirado"));
+
+        assertThrows(org.example.urbanfixbackend.exception.InvalidTokenException.class,
+                () -> authService.loginWithGoogle(request));
+        verifyNoInteractions(usuarioRepository, jwtService);
     }
 }

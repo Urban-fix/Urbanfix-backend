@@ -1,6 +1,7 @@
 package org.example.urbanfixbackend.service;
 
 import org.example.urbanfixbackend.dto.request.CreateUserDTO;
+import org.example.urbanfixbackend.dto.request.GoogleLoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.LoginRequestDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetConfirmDTO;
 import org.example.urbanfixbackend.dto.request.PasswordResetRequestDTO;
@@ -14,6 +15,7 @@ import org.example.urbanfixbackend.dto.response.UsuarioResponseDTO;
 public interface AuthService {
     AuthResponseDTO register(RegisterRequestDTO request);
     AuthResponseDTO login(LoginRequestDTO request);
+    AuthResponseDTO loginWithGoogle(GoogleLoginRequestDTO request);
     AuthResponseDTO refreshToken(String refreshToken);
     PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request);
     PasswordResetValidateResponseDTO validatePasswordReset(PasswordResetValidateDTO request);
